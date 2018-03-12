@@ -6,6 +6,7 @@ src/HM-16.18/build/.vs
 src/HM-16.18/build/linux/*/*/objects
 src/HM-16.18/build/vc2015/Win32
 src/HM-16.18/build/vc2015/x64
+src/HM-16.18/cfg
 src/HM-16.18/doc
 src/HM-16.18/lib
 src/HM-16.18/*.bat
