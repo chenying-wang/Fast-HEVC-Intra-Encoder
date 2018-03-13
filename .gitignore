@@ -1,6 +1,7 @@
 .vscode
 Papers
 src/cc
+src/cnn/__*
 src/HM-16.18/bin
 src/HM-16.18/build/.vs
 src/HM-16.18/build/linux/*/*/objects
@@ -18,5 +19,6 @@ test_sequences
 Thesis
 training_dataset/.img
 training_dataset/*.csv
+training_dataset/*.gz
 training_dataset/*.yuv
 training_dataset/*.zip
