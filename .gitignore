@@ -17,5 +17,6 @@ src/HM-16.18/str.bin
 test_sequences
 Thesis
 training_dataset/.img
+training_dataset/*.csv
 training_dataset/*.yuv
 training_dataset/*.zip
