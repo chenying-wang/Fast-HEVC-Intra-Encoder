@@ -16,8 +16,8 @@ RECORD_DEFAULT = [[0.0] for i in range(FEATURE_SIZE + LABEL_SIZE)]
 def _parse_line(line):
 	record = tf.convert_to_tensor(tf.decode_csv(line, RECORD_DEFAULT))
 	features = tf.reshape(record[0 : FEATURE_SIZE], [FEATURE_WIDTH, FEATURE_HEIGHT])
-	label = record[FEATURE_SIZE : FEATURE_SIZE + LABEL_SIZE]
-	return features, label
+	labels = record[FEATURE_SIZE : FEATURE_SIZE + LABEL_SIZE]
+	return {"features": features, "labels": labels}
 
 def get_dataset():
 	data_filenames = []
@@ -26,5 +26,5 @@ def get_dataset():
 		path += DATA_NAME + "_" + RESOLUTION[i] + "_" + str(FRAME_RATE) + "_"
 		path += str(FEATURE_WIDTH) + FILENAME_SUFFIX
 		data_filenames.append(path)
-	dataset = tf.data.TextLineDataset(data_filenames, compression_type="GZIP").map(_parse_line)
-	return dataset
+	dataset = tf.data.TextLineDataset(data_filenames, compression_type="GZIP")
+	return dataset.map(_parse_line)
