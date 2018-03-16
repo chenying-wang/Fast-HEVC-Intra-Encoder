@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 DATA_BASE_DIR = "..\\..\\training_dataset\\"
 DATA_NAME = "TrainingDataset"
@@ -14,15 +15,19 @@ FRAME_LENGTH = 1000
 FEATURE_WIDTH = 16
 FEATURE_HEIGHT = FEATURE_WIDTH
 FEATURE_SIZE = FEATURE_WIDTH * FEATURE_HEIGHT
-LABEL_SIZE = 1
 
-SHUFFLE_BUFFER = 10
+SHUFFLE_BUFFER = 30000
 
-RECORD_DEFAULT = [[0.0] for i in range(FEATURE_SIZE + LABEL_SIZE)]
+RECORD_DEFAULT = [[0.0] for i in range(FEATURE_SIZE + 1)]
 def _parse_line(line):
-	record = tf.convert_to_tensor(tf.decode_csv(line, RECORD_DEFAULT))
-	features = tf.reshape(record[0 : FEATURE_SIZE], [FEATURE_WIDTH, FEATURE_HEIGHT])
-	labels = tf.cast(record[FEATURE_SIZE : FEATURE_SIZE + LABEL_SIZE], tf.int32)
+	record = tf.decode_csv(line, RECORD_DEFAULT)
+	record_features = record[0 : FEATURE_SIZE]
+	record_features_norm = record_features - tf.reduce_mean(record_features)
+	record_features_norm = tf.scalar_mul(1/128, record_features_norm)
+	record_labels = record[FEATURE_SIZE]
+
+	features = tf.reshape(record_features_norm, [FEATURE_WIDTH, FEATURE_HEIGHT])
+	labels = tf.cast(record_labels, tf.int64)
 	return features, labels
 
 def get():
@@ -34,4 +39,4 @@ def get():
 		path += str(FEATURE_WIDTH) + FILENAME_SUFFIX
 		data_filenames.append(path)
 	dataset = tf.data.TextLineDataset(data_filenames, compression_type="GZIP")
-	return dataset.map(_parse_line)#.shuffle(SHUFFLE_BUFFER)
+	return dataset.map(_parse_line).shuffle(SHUFFLE_BUFFER)

@@ -6,7 +6,9 @@ tf.logging.set_verbosity(tf.logging.INFO)
 import dataset
 
 MODEL_DIR = ".\\.tmp"
-BATCH_SIZE = 100
+EPOCH = 3
+SAMPLE_SIZE = 2304000
+BATCH_SIZE = 16
 
 def inference(features):
 	# Layer #0: Input 16x16x1
@@ -22,7 +24,7 @@ def inference(features):
 		kernel_size = [4, 4],
 		padding = "same",
 		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 1.0),
+		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256),
 		name = "conv1"
 	)
 	pool1 = tf.layers.max_pooling2d(
@@ -39,7 +41,7 @@ def inference(features):
 		kernel_size = [2, 2],
 		padding = "same",
 		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 1.0),
+		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 2048),
 		name = "conv2"
 	)
 	pool2 = tf.layers.max_pooling2d(
@@ -61,14 +63,16 @@ def inference(features):
 		inputs = pool2_flat,
 		units = 256,
 		activation = tf.nn.relu,
+		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 1024),
 		name = "dense1"
 	)
 
-	# Layer #5: Dense 32
+	# Layer #5: Dense 64
 	dense2 = tf.layers.dense(
 		inputs = dense1,
-		units = 32,
+		units = 64,
 		activation = tf.nn.relu,
+		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256),
 		name = "dense2"
 	)
 
@@ -77,6 +81,7 @@ def inference(features):
 		inputs = dense2,
 		units = 2,
 		activation = tf.nn.relu,
+		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 64),
 		name = "logits"
 	)
 
@@ -85,35 +90,52 @@ def inference(features):
 		logits = logits,
 		name = "softmax_tensor"
 	)
+	print(logits)
 	return logits, softmax
-
-def train(labels, logits):
 	
-	loss = tf.nn.softmax_cross_entropy_with_logits_v2(
-		labels = labels,
-		logits = logits
-	)
-	optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.1)
-	optimizer.minimize(loss)
-	return labels, logits, loss
-
-def main(unused_argv):
-	iterator = dataset.get().make_initializable_iterator()
-	features, labels = iterator.get_next()
-	onehot_labels = tf.one_hot(indices = labels, depth = 2)
+def train():
+	with tf.variable_scope("input") as scope:
+		iterator = dataset.get().batch(BATCH_SIZE).make_initializable_iterator()
+		features, labels = iterator.get_next()
+		onehot_labels = tf.one_hot(indices = labels, depth = 2, dtype = tf.int64)
 
 	logits, softmax = inference(features)
+	pred = tf.arg_max(logits, 1)
+
+	loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+		labels = onehot_labels,
+		logits = logits
+	))
+	
+	accuracy = tf.reduce_mean(tf.cast(
+		tf.equal(pred, labels)
+	, tf.float32))
+
+	optimizer = tf.train.AdamOptimizer(learning_rate = 0.001)
+	train_batch = optimizer.minimize(loss)
+	
+	tf.summary.scalar("loss", loss)
+	tf.summary.scalar("accuracy", accuracy)
+	merged = tf.summary.merge_all()	
+
+	summary_writer = tf.summary.FileWriter(MODEL_DIR, tf.get_default_graph())
 
 	with tf.Session() as sess:
-		sess.run(tf.global_variables_initializer())
-		sess.run(iterator.initializer)
+		tf.global_variables_initializer().run()
+		iterator.initializer.run()
 		try:
-			for i in range (1000):
-				print(sess.run(
-					train(onehot_labels, logits)
-				))
+			for step in range (int(EPOCH * SAMPLE_SIZE / BATCH_SIZE)):
+				_, avg_loss = sess.run([train_batch, loss])
+				summary = sess.run(merged)
+				summary_writer.add_summary(summary, step)
+				print("Step %d, loss = %f" % (step, avg_loss))
 		except tf.errors.OutOfRangeError:
 			print("END!")
+		
+	summary_writer.close()
+
+def main(unused_argv):
+	train()
 
 if __name__ == "__main__":
 	tf.app.run()
