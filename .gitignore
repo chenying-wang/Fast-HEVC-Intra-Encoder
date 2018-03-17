@@ -16,6 +16,7 @@ src/HM-16.18/*.csv
 src/HM-16.18/*.sh
 src/HM-16.18/rec.yuv
 src/HM-16.18/str.bin
+test_dataset
 test_sequences
 Thesis
 training_dataset/.img
