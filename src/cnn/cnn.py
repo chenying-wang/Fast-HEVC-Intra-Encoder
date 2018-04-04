@@ -8,89 +8,159 @@ import dataset
 MODEL_DIR = ".\\.tmp"
 EPOCH = 3
 SAMPLE_SIZE = 2304000
+SAMPLE_SIZE = 480
 BATCH_SIZE = 16
 
 def inference(features):
 	# Layer #0: Input 16x16x1
 	input_layer = tf.reshape(
 		tensor = features,
-		shape = [-1, dataset.FEATURE_WIDTH, dataset.FEATURE_HEIGHT, 1]
+		shape = [BATCH_SIZE, dataset.FEATURE_WIDTH, dataset.FEATURE_HEIGHT, 1]
 	)
 	
 	# Layer #1: Conv 4x4x128
-	conv1 = tf.layers.conv2d(
-		inputs = input_layer,
-		filters = 128,
-		kernel_size = [4, 4],
-		padding = "same",
-		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256),
-		name = "conv1"
-	)
-	pool1 = tf.layers.max_pooling2d(
-		inputs = conv1,
-		pool_size = [4, 4],
-		strides = 4,
-		name = "pool1"
-	)
+	with tf.variable_scope("conv1") as scope:
+		kernel = tf.get_variable(
+			name = "weights",
+			shape = [4, 4, 1, 128],
+			dtype = tf.float32,
+			initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256)
+		)
+		conv = tf.nn.conv2d(
+			input = input_layer,
+			filter = kernel,
+			strides = [1, 1, 1, 1],
+			padding = "SAME"
+		)
+		biases = tf.get_variable(
+			name = "biases",
+			shape = [128],
+			dtype = tf.float32,
+			initializer = tf.zeros_initializer()
+		)
+		pre_activation = tf.nn.bias_add(
+			value = conv,
+			bias = biases
+		)
+		conv1 = tf.nn.relu(
+			features = pre_activation,
+			name = scope.name
+		)
+	with tf.variable_scope("pool1") as scope:
+		pool1 = tf.nn.max_pool(
+			value = conv1,
+			ksize = [1, 4, 4, 1],
+			strides = [1, 4, 4, 1],
+			padding = "SAME",
+			name = scope.name
+		)
 
 	# Layer #2: Conv 2x2x256
-	conv2 = tf.layers.conv2d(
-		inputs = pool1,
-		filters = 256,
-		kernel_size = [2, 2],
-		padding = "same",
-		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 2048),
-		name = "conv2"
-	)
-	pool2 = tf.layers.max_pooling2d(
-		inputs = conv2,
-		pool_size = [2, 2],
-		strides = 2,
-		name = "pool2"
-	)
+	with tf.variable_scope("conv2") as scope:
+		kernel = tf.get_variable(
+			name = "weights",
+			shape = [2, 2, 128, 256],
+			dtype = tf.float32,
+			initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 2048)
+		)
+		conv = tf.nn.conv2d(
+			input = pool1,
+			filter = kernel,
+			strides = [1, 1, 1, 1],
+			padding = "SAME"
+		)
+		biases = tf.get_variable(
+			name = "biases",
+			shape = [256],
+			dtype = tf.float32,
+			initializer = tf.zeros_initializer()
+		)
+		pre_activation = tf.nn.bias_add(
+			value = conv,
+			bias = biases
+		)
+		conv2 = tf.nn.relu(
+			features = pre_activation,
+			name = scope.name
+		)
+	with tf.variable_scope("pool2") as scope:
+		pool2 = tf.nn.max_pool(
+			value = conv2,
+			ksize = [1, 2, 2, 1],
+			strides = [1, 2, 2, 1],
+			padding = "SAME",
+			name = scope.name
+		)
 
 	# Layer #3: Concat 1024
-	pool2_flat = tf.reshape(
-		tensor = pool2,
-		shape = [-1, 1024],  #[-1, tf.cast(tf.divide(tf.size(pool2), tf.shape(pool2)[0]), tf.int32)]
-		name = "pool2_flat"
-	)
+	with tf.variable_scope("concat") as scope:
+		pool2_flat = tf.reshape(
+			tensor = pool2,
+			shape = [-1, 1024],  #[-1, tf.cast(tf.divide(tf.size(pool2), tf.shape(pool2)[0]), tf.int32)]
+			name = "pool2_flat"
+		)
 	
 	# Layer #4: Dense 256
-	dense1 = tf.layers.dense(
-		inputs = pool2_flat,
-		units = 256,
-		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 1024),
-		name = "dense1"
-	)
+	with tf.variable_scope("dense1") as scope:
+		weights = tf.get_variable(
+			name = "weights",
+			shape = [1024, 256],
+			dtype = tf.float32,
+			initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 1024)
+		)
+		biases = tf.get_variable(
+			name = 'biases',
+			shape = [256],
+			initializer = tf.zeros_initializer()
+		)
+		dense1 = tf.nn.relu(
+			features = tf.matmul(pool2_flat, weights) + biases,
+			name = scope.name
+		)
 
 	# Layer #5: Dense 64
-	dense2 = tf.layers.dense(
-		inputs = dense1,
-		units = 64,
-		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256),
-		name = "dense2"
-	)
+	with tf.variable_scope("dense2") as scope:
+		weights = tf.get_variable(
+			name = "weights",
+			shape = [256, 64],
+			dtype = tf.float32,
+			initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 256)
+		)
+		biases = tf.get_variable(
+			name = 'biases',
+			shape = [64],
+			initializer = tf.zeros_initializer()
+		)
+		dense2 = tf.nn.relu(
+			features = tf.matmul(dense1, weights) + biases,
+			name = scope.name
+		)
 
 	# Layers #6: Logits 2
-	logits = tf.layers.dense(
-		inputs = dense2,
-		units = 2,
-		activation = tf.nn.relu,
-		kernel_initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 64),
-		name = "logits"
-	)
+	with tf.variable_scope("logits") as scope:
+		weights = tf.get_variable(
+			name = "weights",
+			shape = [64, 2],
+			dtype = tf.float32,
+			initializer = tf.random_normal_initializer(mean = 0.0, stddev = 2 / 64)
+		)
+		biases = tf.get_variable(
+			name = 'biases',
+			shape = [2],
+			initializer = tf.zeros_initializer()
+		)
+		logits = tf.nn.relu(
+			features = tf.matmul(dense2, weights) + biases,
+			name = scope.name
+		)
 
 	# Layers #7: Softmax 2
-	softmax = tf.nn.softmax(
-		logits = logits,
-		name = "softmax_tensor"
-	)
-	print(logits)
+	with tf.variable_scope("softmax") as scope:
+		softmax = tf.nn.softmax(
+			logits = logits,
+			name = scope.name
+		)
+
 	return logits, softmax
 	
 def train():
@@ -100,7 +170,7 @@ def train():
 		onehot_labels = tf.one_hot(indices = labels, depth = 2, dtype = tf.int64)
 
 	logits, softmax = inference(features)
-	pred = tf.arg_max(logits, 1)
+	pred = tf.argmax(logits, 1)
 
 	loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
 		labels = onehot_labels,
