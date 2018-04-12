@@ -1,6 +1,7 @@
 import tensorflow as tf
+import numpy as np
 
-import dataset
+import data
 import cnn
 
 EVAL_LOG_DIR = "./.tmp/eval"
@@ -9,12 +10,17 @@ BATCH_SIZE = 1000
 
 CKPT_PATH = "./.tmp/"
 
-def eval():
+def eval(depth):
 	with tf.variable_scope("input") as scope:
-		iterator = dataset.get_eval().buuatch(BATCH_SIZE).make_initializable_iterator()
-		features, labels = iterator.get_next()
+		iterator = data.Dataset(depth).get_eval().batch(BATCH_SIZE).make_initializable_iterator()
+		raw_features, labels = iterator.get_next()
+		features = tf.reshape(
+			tensor = raw_features,
+			shape = [-1, data.FEATURE_HEIGHT[depth], data.FEATURE_WIDTH[depth], 1]
+		)
 
-	logits, softmax = cnn.inference(features, dataset.FEATURE_WIDTH, dataset.FEATURE_HEIGHT)
+	size_index = tf.convert_to_tensor(depth * np.ones([BATCH_SIZE]), dtype = tf.int32)
+	logits, softmax = cnn.inference(features, size_index)
 	pred = tf.argmax(logits, 1)
 	
 	accuracy = tf.reduce_mean(tf.cast(
@@ -29,7 +35,7 @@ def eval():
 		
 		if tf.train.get_checkpoint_state(CKPT_PATH):
 			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH))
-		
+	
 		correct_count = 0
 		precision = 0.0
 		for count in range (int(SAMPLE_SIZE / BATCH_SIZE)):
@@ -43,7 +49,7 @@ def eval():
 		print("Evaluation Done")
 
 def main(unused_argv):
-	eval()
+	eval(2)
 
 if __name__ == "__main__":
 	tf.app.run()
