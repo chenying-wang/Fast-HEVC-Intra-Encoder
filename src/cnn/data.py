@@ -21,6 +21,8 @@ FRAME_LENGTH = 1000
 FEATURE_WIDTH = [64, 32, 16]
 FEATURE_HEIGHT = FEATURE_WIDTH
 
+SHUFFLE = True
+
 class Dataset:
 
 	def __init__(self, size_index):
@@ -51,7 +53,9 @@ class Dataset:
 		
 		dataset = tf.data.TextLineDataset(data_filenames, compression_type = "GZIP")
 
-		return dataset.map(self._parse_line).shuffle(self.shuffle_buffer)
+		if SHUFFLE:
+			return dataset.map(self._parse_line).shuffle(self.shuffle_buffer)
+		return dataset.map(self._parse_line)
 
 	def get_eval(self):
 		data_filenames = [EVAL_DATA_BASE_DIR + EVAL_DATA_NAME[1]]

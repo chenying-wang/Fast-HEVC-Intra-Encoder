@@ -3,11 +3,19 @@ import numpy as np
 
 import data
 import cnn
+import new_cnn
 
 TRAINING_LOG_DIR = "./.tmp/train"
 EPOCH = 1
 SAMPLE_SIZE = 51520000
-BATCH_SIZE = 64
+# SAMPLE_SIZE = 32
+BATCH_SIZE = 16
+
+INIT_LEARNING_RATE = 0.001
+DECAY_STEPS = 10000
+DECAY_RATE = 0.98
+
+KEEP_PROB = 0.8
 
 CKPT_PATH = "./.tmp/"
 CKPT_PREFIX = "training.ckpt"
@@ -16,7 +24,6 @@ CKPT_STEP = 1000
 class Train:
 
 	def train(self):
-
 		global_step = tf.Variable(initial_value = 1, trainable = False, name = "global_step")
 
 		iterators = []
@@ -63,7 +70,7 @@ class Train:
 				name = "fed_data"
 			)
 
-		logits, softmax = cnn.inference(fed_features, fed_size_index)
+		logits, softmax = new_cnn.inference(fed_features, fed_size_index, KEEP_PROB)
 
 		with tf.variable_scope("train") as scope:
 			pred = tf.argmax(logits, 1)
@@ -78,7 +85,18 @@ class Train:
 				tf.equal(pred, fed_labels)
 			, tf.float32))
 
-			optimizer = tf.train.AdamOptimizer(learning_rate = 0.001, beta1 = 0.9, beta2 = 0.999)
+			learning_rate = tf.train.exponential_decay(
+				learning_rate = INIT_LEARNING_RATE,
+				decay_steps = DECAY_STEPS,
+				decay_rate = DECAY_RATE,
+				global_step = global_step,
+
+			)
+			optimizer = tf.train.AdamOptimizer(
+				learning_rate = learning_rate,
+				beta1 = 0.9,
+				beta2 = 0.999
+			)
 			train_batch = optimizer.minimize(loss, global_step = global_step)
 		
 		tf.summary.scalar("loss", loss, family = "train")
@@ -100,7 +118,9 @@ class Train:
 			for _ in range (int(EPOCH * SAMPLE_SIZE / BATCH_SIZE)):
 				_global_step = sess.run(global_step)
 
-				_, _loss, _accuracy,  = sess.run([train_batch, loss, accuracy])
+				_, _loss, _accuracy,  = sess.run(
+					[train_batch, loss, accuracy]
+				)
 				print("Step %d, loss = %f, accuracy = %.2f%%, width = height = %d" % (_global_step, _loss, 100 * _accuracy, data.FEATURE_WIDTH[sess.run(index)]))
 				summary = sess.run(merged)
 				summary_writer.add_summary(summary, _global_step)

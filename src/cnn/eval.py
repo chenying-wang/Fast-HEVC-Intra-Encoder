@@ -35,16 +35,40 @@ def eval(depth):
 		
 		if tf.train.get_checkpoint_state(CKPT_PATH):
 			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH))
-	
-		correct_count = 0
-		precision = 0.0
-		for count in range (int(SAMPLE_SIZE / BATCH_SIZE)):
-			acc = sess.run(accuracy)
-			correct_count += acc * BATCH_SIZE
-			precision = 100 * correct_count / ((count + 1) * BATCH_SIZE)
-			print("Sample %d, total_accuracy = %.2f%%, correct = %.1f%%" %
-				(count * BATCH_SIZE, precision, 100 * acc)
+
+		confusion_sum = [[0, 0], [0, 0]]
+		for idx in range(int(SAMPLE_SIZE / BATCH_SIZE)):
+			_pred, _labels, _accuracy = sess.run(
+				[pred, labels, accuracy]
 			)
+				
+			confusion = [[0, 0], [0, 0]]
+			for i in range(BATCH_SIZE):
+				l = _labels[i]
+				p = _pred[i]
+				confusion[l][p] += 1
+
+			print("Sample %d, accuracy = %.2f%%, unsplit_recall = %.2f%%, split_recall = %.2f%%" %
+				(
+					idx,
+					(100 * (confusion[0][0] + confusion[1][1]) / (sum(confusion[0]) + sum(confusion[1]))),
+					(100 * confusion[0][0] / sum(confusion[0])),
+					(100 * confusion[1][1] / sum(confusion[1]))
+				)
+			)
+			print(confusion)
+
+			for i in range(2):
+				for j in range(2):
+					confusion_sum[i][j] += confusion[i][j]
+			print("total_accuracy = %.2f%%, total_unsplit_recall = %.2f%%, total_split_recall = %.2f%%" %
+				(
+					(100 * (confusion_sum[0][0] + confusion_sum[1][1]) / (sum(confusion_sum[0]) + sum(confusion_sum[1]))),
+					(100 * confusion_sum[0][0] / sum(confusion_sum[0])),
+					(100 * confusion_sum[1][1] / sum(confusion_sum[1]))
+				)
+			)
+			print(confusion_sum)
 
 		print("Evaluation Done")
 

@@ -17,6 +17,7 @@ src/HM-16.18/*.sh
 src/HM-16.18/rec.yuv
 src/HM-16.18/str.bin
 src/JM
+src/test
 test_dataset
 test_sequences
 Thesis

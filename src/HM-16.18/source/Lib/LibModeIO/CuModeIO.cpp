@@ -65,9 +65,15 @@ Void CuModeIO::init(const std::string &filename,
 /**
  * TODO: Read all CU Mode of a picture
 */
-Void CuModeIO::read()
+Void CuModeIO::read(TComPic* &pcPic)
 {
+  if (pcPic->getSlice(0)->getSliceType() != I_SLICE)
+  {
+    std::cerr << "WARNING: POC: " << pcPic->getPOC() << " is not I_SLICE!";
+    return;
+  }
 
+  
 }
 
 /**
