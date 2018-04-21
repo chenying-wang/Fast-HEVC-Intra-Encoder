@@ -145,7 +145,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_lastBPSEI          = 0;
   m_totalCoded         = 0;
 
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   m_pcCuModeIO = pcTEncTop->getCuModeIO();
 #endif
 }
@@ -1555,6 +1555,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     const Int numSubstreamRows     = pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() ? pcPic->getFrameHeightInCtus() : (pcSlice->getPPS()->getNumTileRowsMinus1() + 1);
     const Int numSubstreams        = numSubstreamRows * numSubstreamsColumns;
     std::vector<TComOutputBitstream> substreamsOut(numSubstreams);
+
+#if _CU_MODE_INPUT
+    m_pcCuModeIO->read(pcPic);
+#endif
 
     // now compress (trial encode) the various slice segments (slices, and dependent slices)
     {

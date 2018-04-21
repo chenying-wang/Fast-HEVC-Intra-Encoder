@@ -147,7 +147,7 @@ private:
   SEIEncoder              m_seiEncoder;
   TComPicYuv*             m_pcDeblockingTempPicYuv;
   Int                     m_DBParam[MAX_ENCODER_DEBLOCKING_QUALITY_LAYERS][4];   //[layer_id][0: available; 1: bDBDisabled; 2: Beta Offset Div2; 3: Tc Offset Div2;]
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   CuModeIO*               m_pcCuModeIO;
 #endif
 public:

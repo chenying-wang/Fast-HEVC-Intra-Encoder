@@ -29,7 +29,7 @@ MSBuild /t:Build src\HM-16.18\build\HM_vc2015.sln
 
 Copyright (c) 2018 Chenying Wang \<wangchenying@hust.edu.cn\>
 
-Licensed under [MIT License](LICENSE)
+Licensed under the [MIT License](LICENSE)
 
 ---
 

@@ -462,7 +462,7 @@ Void TAppEncTop::xDestroyLib()
 
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 { 
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   m_cTEncTop.init(isFieldCoding, m_inputFileName);
 #else
   m_cTEncTop.init(isFieldCoding);

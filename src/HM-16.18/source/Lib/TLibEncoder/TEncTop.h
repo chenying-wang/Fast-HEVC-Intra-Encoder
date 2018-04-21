@@ -111,7 +111,9 @@ private:
 
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
 
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   CuModeIO*               m_pcCuModeIO;
+#endif
 
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic, Int ppsId ); ///< get picture buffer which will be processed. If ppsId<0, then the ppsMap will be queried for the first match.
@@ -130,7 +132,7 @@ public:
 
   Void      create          ();
   Void      destroy         ();
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   Void      init(Bool isFieldCoding, const std::string &inputFilename);
 #else
   Void      init(Bool isFieldCoding);
@@ -160,7 +162,9 @@ public:
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
 
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   CuModeIO*               getCuModeIO           () { return m_pcCuModeIO;             }
+#endif
 
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
   Int getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid );
@@ -199,4 +203,3 @@ public:
 //! \}
 
 #endif // __TENCTOP__
-

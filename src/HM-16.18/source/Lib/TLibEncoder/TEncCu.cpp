@@ -237,7 +237,12 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
   // analysis of CU
   DEBUG_STRING_NEW(sDebug)
 
+  UChar *puhDepth = pCtu->getDepth();
+#if _CU_MODE_INPUT
+  xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0, new UInt[16] DEBUG_STRING_PASS_INTO(sDebug) );  
+#else
   xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0 DEBUG_STRING_PASS_INTO(sDebug) );
+#endif
   DEBUG_STRING_OUTPUT(std::cout, sDebug)
 
 #if ADAPTIVE_QP_SELECTION
@@ -432,7 +437,11 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, 
  *  - for loop of QP value to compress the current CU with all possible QP
 */
 #if AMP_ENC_SPEEDUP
+#if _CU_MODE_INPUT
+Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth, const UInt* puiBestDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
+#else
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
+#endif
 #else
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth )
 #endif
@@ -512,7 +521,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   const Bool bBoundary = !( uiRPelX < sps.getPicWidthInLumaSamples() && uiBPelY < sps.getPicHeightInLumaSamples() );
 
+  // std::cout << rpcBestCU->getZorderIdxInCtu() << "  ";
+
+#if _CU_MODE_INPUT && 0
+  const Bool bSplit = uiDepth == puiBestDepth[rpcBestCU->getZorderIdxInCtu()];
+  if ( !bBoundary && !bSplit ) 
+#else
   if ( !bBoundary )
+#endif
   {
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
@@ -840,7 +856,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
+#if _CU_MODE_INPUT && 0
+  const Bool bSubBranch = bBoundary || ( bSplit && !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) ) );
+#else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
+#endif
 
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
@@ -878,12 +898,19 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           DEBUG_STRING_NEW(sChild)
           if ( !(rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isInter(0)) )
           {
+#if _CU_MODE_INPUT
+            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puiBestDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
+#else
             xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
+#endif
           }
           else
           {
-
+#if _CU_MODE_INPUT
+            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puiBestDepth DEBUG_STRING_PASS_INTO(sChild), rpcBestCU->getPartitionSize(0) );
+#else
             xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth DEBUG_STRING_PASS_INTO(sChild), rpcBestCU->getPartitionSize(0) );
+#endif
           }
           DEBUG_STRING_APPEND(sTempDebug, sChild)
 #else

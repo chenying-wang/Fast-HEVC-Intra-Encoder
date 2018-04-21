@@ -5,6 +5,8 @@
 #include "TLibCommon/TComSlice.h"
 #include "TLibCommon/TComPic.h"
 
+#include "CuEstimator.h"
+
 #ifndef __CUMODEIO__
 #define __CUMODEIO__
 
@@ -20,6 +22,8 @@ enum IOMode
 class CuModeIO
 {
 private:
+  CuEstimator* m_cCuEstimator;
+  
   fstream m_file;
   std::string m_filename;
   IOMode m_mode;
@@ -34,32 +38,33 @@ private:
 
   UInt m_uiFrameWidthInCtus;
   UInt m_uiFrameHeightInCtus;
+  UInt m_uiNumOfCtus;
   UInt m_uiNumPartInCtuWidth;
   UInt m_uiNumPartInCtuHeight;
 
   struct CuMode
   {
-    UChar* puhDepth;
-    UChar* puhLumaIntraDir;
-    SChar* pePartSize;
+    UChar *puhDepth;
+    UChar *puhLumaIntraDir;
+    SChar *pePartSize;
   };
 
   struct PicCuMode
   {
     UInt uiPOC;
-    CuMode* psCuMode;
-  }* m_psPicCuMode;
+    CuMode *psCuMode;
+  } *m_psPicCuMode;
 
 protected:
   Void xSetFilename(const std::string &filename, UInt maxCUWidth);
-  Void xExtractMode(TComPic*& pcPic);
+  Void xExtractMode(TComPic *&pcPic);
 
 public:
   CuModeIO(IOMode mode);
   virtual ~CuModeIO();
-  Void init(const std::string &filename, const Int numPictures, const Int picWidth, const Int picHeight, const UInt maxCUWidth, const UInt maxCUHeight, const UInt maxTotalCUDepth);
-  Void read(TComPic* &pcPic);
-  Void write(TComPic* &pcPic);
+  Void init(const std::string &filename, const Int iNumPictures, const Int iPicWidth, const Int iPicHeight, const UInt uiMaxCuWidth, const UInt uiMaxCuHeight, const UInt uiMaxTotalCUDepth);
+  Void read(TComPic *&pcPic);
+  Void write(TComPic *&pcPic);
 };
 
 #endif // __CUMODEIO__

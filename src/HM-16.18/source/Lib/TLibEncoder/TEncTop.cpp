@@ -145,7 +145,9 @@ Void TEncTop::create ()
     }
   }
 
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT
+  m_pcCuModeIO = new CuModeIO(IN);
+#elif _CU_MODE_OUTPUT
   m_pcCuModeIO = new CuModeIO(OUT);
 #endif
 }
@@ -180,7 +182,7 @@ Void TEncTop::destroy ()
   delete [] m_pppcRDSbacCoder;
   delete [] m_pppcBinCoderCABAC;
 
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   delete m_pcCuModeIO;
 #endif
 
@@ -189,7 +191,7 @@ Void TEncTop::destroy ()
 
   return;
 }
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
 Void TEncTop::init(Bool isFieldCoding, const std::string &inputFilename)
 #else
 Void TEncTop::init(Bool isFieldCoding)
@@ -245,7 +247,7 @@ Void TEncTop::init(Bool isFieldCoding)
 
   m_iMaxRefPicNum = 0;
 
-#if _CU_MODE_OUTPUT
+#if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   m_pcCuModeIO->init(inputFilename, m_framesToBeEncoded, m_iSourceWidth, m_iSourceHeight,
     m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth);
 #endif

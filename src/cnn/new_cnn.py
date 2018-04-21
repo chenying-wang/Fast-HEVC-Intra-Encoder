@@ -270,7 +270,7 @@ def inference(features, size_index, keep_prob = 1.0):
 			filter_size = [1, 1],
 			biases = True,
 			activation = True,
-			name = "conv1_reduced"
+			name = "conv2_reduced"
 		),
 		input_shape = [32, 32, 12],
 		filters = 32,
@@ -329,17 +329,17 @@ def inference(features, size_index, keep_prob = 1.0):
 			reduced_channel = [24, 4],
 			name = "inception4b"
 		)
-		inception4c = _inception_8x8(
-			input = inception4b,
-			input_channel = 96,
-			branch_channel = [48, 60, 24, 24],
-			reduced_channel = [30, 6],
-			name = "inception4c"
-		)
+		# inception4c = _inception_8x8(
+		# 	input = inception4b,
+		# 	input_channel = 96,
+		# 	branch_channel = [48, 60, 24, 24],
+		# 	reduced_channel = [30, 6],
+		# 	name = "inception4c"
+		# )
 
-	# Pool #4: 8x8x156 avg 8x8/1v 1x1x156
+	# Pool #4: 8x8x96avg 8x8/1v 1x1x96
 	pool4 = _avg_pooling(
-		input = inception4c,
+		input = inception4b,
 		pool_size = 8,
 		strides = 1,
 		padding = "VALID",
@@ -350,14 +350,14 @@ def inference(features, size_index, keep_prob = 1.0):
 	with tf.variable_scope("fc") as scope:
 		pool4_flat = tf.reshape(
 			tensor = pool4,
-			shape = [-1, 156],
+			shape = [-1, 96],
 			name = "pool4_flat"
 		)
 		logits = _fc_with_dropout(
 			input = pool4_flat,
-			input_size = 156,
+			input_size = 96,
 			output_size = 2,
-			keep_prob = 0.6,
+			keep_prob = keep_prob,
 			name = "logits"
 		)
 

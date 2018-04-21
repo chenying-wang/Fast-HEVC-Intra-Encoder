@@ -38,7 +38,9 @@ DEFS			= -DMSYS_LINUX
 
 # set objects
 OBJS          	= \
+			$(OBJ_DIR)/CuEstimator.o \
 			$(OBJ_DIR)/CuModeIO.o \
+			$(OBJ_DIR)/SessionHandler.o \
 
 LIBS				= -lpthread
 
