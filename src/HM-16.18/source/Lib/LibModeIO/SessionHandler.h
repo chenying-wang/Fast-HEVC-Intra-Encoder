@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "TLibCommon/CommonDef.h"
+
 // #include "tensorflow/core/platform/env.h"
 // #include "tensorflow/core/public/session.h"
 
@@ -18,6 +20,7 @@ private:
 public:
   SessionHandler();
   virtual ~SessionHandler();
+  Bool *infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth);
 };
 
 #endif // __SESSIONHANDLER__

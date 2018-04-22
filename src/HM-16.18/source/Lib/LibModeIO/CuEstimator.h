@@ -18,12 +18,14 @@ private:
   Int m_iPicHeight;
   UInt m_uiMaxCuWidth;
   UInt m_uiMaxCuHeight;
+  UInt m_uiMaxCuSize;
   UInt m_uiNumOfCtus;
-  UInt *m_puiNumOfCu;
+
+  Pel **m_ppsCusLuma;
+  UShort *m_pusCuIdx;
 
   Pel **m_ppCuMaxLuma;
   Pel **m_ppCuMinLuma;
-
   UChar **m_ppuhBestDepth;
 
 protected:

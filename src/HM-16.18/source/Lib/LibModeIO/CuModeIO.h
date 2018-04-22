@@ -42,6 +42,8 @@ private:
   UInt m_uiNumPartInCtuWidth;
   UInt m_uiNumPartInCtuHeight;
 
+  Pel **m_ppsCtuLuma;
+
   struct CuMode
   {
     UChar *puhDepth;

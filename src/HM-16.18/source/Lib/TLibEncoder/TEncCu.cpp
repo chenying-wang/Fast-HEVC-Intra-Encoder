@@ -237,7 +237,6 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
   // analysis of CU
   DEBUG_STRING_NEW(sDebug)
 
-  UChar *puhDepth = pCtu->getDepth();
 #if _CU_MODE_INPUT
   xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0, new UInt[16] DEBUG_STRING_PASS_INTO(sDebug) );  
 #else

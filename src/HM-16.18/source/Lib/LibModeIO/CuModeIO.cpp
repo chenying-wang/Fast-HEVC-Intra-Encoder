@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
+#include <memory.h>
 
 #include "CuModeIO.h"
 #include "CuEstimator.h"
@@ -23,7 +24,7 @@ CuModeIO::~CuModeIO()
 {
   if (m_mode == IN) delete m_cCuEstimator;
   delete[] m_psPicCuMode->psCuMode;
-  delete m_psPicCuMode;
+  delete[] m_psPicCuMode;
 }
 
 /**
@@ -39,14 +40,6 @@ Void CuModeIO::init(const std::string &filename,
 {
   assert(m_mode == IN || m_mode == OUT);
   xSetFilename(filename, uiMaxCuWidth);
-  if (m_mode == IN)
-  {
-    m_cCuEstimator = new CuEstimator();
-  }
-  else if (m_mode == OUT)
-  {
-    m_file.open(m_filename, fstream::out);
-  }
 
   m_iNumPictures = iNumPictures;
   m_iPicWidth = iPicWidth;
@@ -66,12 +59,22 @@ Void CuModeIO::init(const std::string &filename,
 
   if (m_mode == IN)
   {
+    m_ppsCtuLuma = new Pel*[m_uiNumOfCtus];
+    for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
+    {
+      m_ppsCtuLuma[uiCtuRsAddr] = new Pel[m_uiMaxCuWidth * m_uiMaxCuHeight];
+    }
+    m_cCuEstimator = new CuEstimator();
     m_cCuEstimator->init(m_iPicWidth, m_iPicHeight, m_uiMaxCuWidth, m_uiMaxCuHeight, m_uiNumOfCtus);
+  }
+  else if (m_mode == OUT)
+  {
+    m_file.open(m_filename, fstream::out);
   }
 }
 
 /**
- * TODO: Read all CU Mode of a picture
+ * Read all CU Mode of a picture
 */
 Void CuModeIO::read(TComPic *&pcPic)
 {
@@ -86,22 +89,20 @@ Void CuModeIO::read(TComPic *&pcPic)
   TComPicYuv *pcPicYuv = pcPic->getPicYuvTrueOrg();
 
   const UInt stride = pcPicYuv->getStride(COMPONENT_Y);
-  const CuMode *cuMode = m_psPicCuMode->psCuMode;
-  Pel **ppsCtuLuma = new Pel*[m_uiNumOfCtus];
+  // const CuMode *cuMode = m_psPicCuMode->psCuMode;
 
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
-    Pel *ctuLuma = new Pel[m_uiMaxCuWidth * m_uiMaxCuHeight];
     Pel *ctuLumaAddr = pcPicYuv->getAddr(COMPONENT_Y, uiCtuRsAddr);
     for(UInt uiRow = 0; uiRow < m_uiMaxCuHeight; ++uiRow)
     {
       UInt offset = uiRow * stride;
-      memcpy(ctuLuma + uiRow * m_uiMaxCuWidth, ctuLumaAddr + offset, m_uiMaxCuWidth * sizeof(Pel));
-      ppsCtuLuma[uiCtuRsAddr] = ctuLuma;
+      memcpy(m_ppsCtuLuma[uiCtuRsAddr] + uiRow * m_uiMaxCuWidth, ctuLumaAddr + offset, m_uiMaxCuWidth * sizeof(Pel));
     }
   }
 
-  UChar **pphBestDepth = m_cCuEstimator->estimateCtu(ppsCtuLuma);
+  UChar **pphBestDepth = m_cCuEstimator->estimateCtu(m_ppsCtuLuma);
+  std::cout << "pphBestDepth..." << pphBestDepth << std::endl;
 }
 
 /**
