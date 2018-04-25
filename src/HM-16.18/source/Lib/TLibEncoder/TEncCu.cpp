@@ -238,7 +238,8 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
   DEBUG_STRING_NEW(sDebug)
 
 #if _CU_MODE_INPUT
-  xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0, new UInt[16] DEBUG_STRING_PASS_INTO(sDebug) );  
+  UChar *phBestDepth = m_pcSliceEncoder->getGOPEncoder()->getCurrPicBestDepth()[pCtu->getCtuRsAddr()];
+  xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0, phBestDepth DEBUG_STRING_PASS_INTO(sDebug) );  
 #else
   xCompressCU( m_ppcBestCU[0], m_ppcTempCU[0], 0 DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -437,7 +438,7 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, 
 */
 #if AMP_ENC_SPEEDUP
 #if _CU_MODE_INPUT
-Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth, const UInt* puiBestDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
+Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth, const UChar* puhBestDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
 #else
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
 #endif
@@ -520,10 +521,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   const Bool bBoundary = !( uiRPelX < sps.getPicWidthInLumaSamples() && uiBPelY < sps.getPicHeightInLumaSamples() );
 
-  // std::cout << rpcBestCU->getZorderIdxInCtu() << "  ";
-
 #if _CU_MODE_INPUT && 0
-  const Bool bSplit = uiDepth == puiBestDepth[rpcBestCU->getZorderIdxInCtu()];
+  const Bool bSplit = uiDepth == puhBestDepth[rpcBestCU->getZorderIdxInCtu()];
   if ( !bBoundary && !bSplit ) 
 #else
   if ( !bBoundary )
@@ -898,7 +897,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           if ( !(rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isInter(0)) )
           {
 #if _CU_MODE_INPUT
-            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puiBestDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
+            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puhBestDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
 #else
             xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
 #endif
@@ -906,7 +905,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           else
           {
 #if _CU_MODE_INPUT
-            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puiBestDepth DEBUG_STRING_PASS_INTO(sChild), rpcBestCU->getPartitionSize(0) );
+            xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth, puhBestDepth DEBUG_STRING_PASS_INTO(sChild), rpcBestCU->getPartitionSize(0) );
 #else
             xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth DEBUG_STRING_PASS_INTO(sChild), rpcBestCU->getPartitionSize(0) );
 #endif

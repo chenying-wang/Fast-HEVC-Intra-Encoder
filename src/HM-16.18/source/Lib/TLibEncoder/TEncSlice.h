@@ -136,6 +136,10 @@ public:
 
   SliceType getEncCABACTableIdx() const           { return m_encCABACTableIdx;        }
 
+#if _CU_MODE_INPUT
+  TEncGOP *getGOPEncoder() const { return m_pcGOPEncoder; }
+#endif
+
 private:
   Double  xGetQPValueAccordingToLambda ( Double lambda );
 };

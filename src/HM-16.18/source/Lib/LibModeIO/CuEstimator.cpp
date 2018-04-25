@@ -1,22 +1,21 @@
 #include <iostream>
 #include <climits>
-#include <memory.h>
+#include <memory>
 
 #include "CuEstimator.h"
 #include "SessionHandler.h"
 
-using namespace std;
-
-#define TOTAL_DEPTH 4
-#define NUMBER_OF_CU_TO_ESTIMATE (1 << ((TOTAL_DEPTH - 2) << 1))
-
-#define RANGE_LOW_THRESHOLD 30
-
+/**
+ * Constructor
+*/
 CuEstimator::CuEstimator()
 {
   m_cSessionHandler = new SessionHandler();
 }
 
+/**
+ * Destructor
+*/
 CuEstimator::~CuEstimator()
 {
   delete m_cSessionHandler;
@@ -39,6 +38,9 @@ CuEstimator::~CuEstimator()
   delete[] m_ppuhBestDepth;
 }
 
+/**
+ * Initialize class member
+*/
 Void CuEstimator::init(const Int iPicWidth,
                        const Int iPicHeight,
                        const UInt uiMaxCuWidth,
@@ -72,6 +74,9 @@ Void CuEstimator::init(const Int iPicWidth,
   }
 }
 
+/**
+ * 
+*/
 UChar **CuEstimator::estimateCtu(Pel **ppsCtusLuma)
 {
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
@@ -82,28 +87,17 @@ UChar **CuEstimator::estimateCtu(Pel **ppsCtusLuma)
   }
 
   xProcessCtu(ppsCtusLuma);
-
   for (UChar depth = 0; depth <= TOTAL_DEPTH - 2; ++depth)
   {
     xSplitCuInDepth(ppsCtusLuma, depth);
   }
 
-  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
-  {
-    for (UInt uiRsIdx = 0; uiRsIdx < 16; ++uiRsIdx)
-    {
-      UChar uhZIdx = (0x9 & uiRsIdx) | (0x4 & uiRsIdx << 1) | (0x2 & uiRsIdx >> 1);
-      std::cout << (UInt)m_ppCuMaxLuma[uiCtuRsAddr][uhZIdx] << ' '
-        << (UInt)m_ppCuMinLuma[uiCtuRsAddr][uhZIdx] << ' '
-        << (UInt)m_ppuhBestDepth[uiCtuRsAddr][uhZIdx] << ' ';
-      if (uiRsIdx % 4 == 3) std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-
   return m_ppuhBestDepth;
 }
 
+/**
+ * 
+*/
 Void CuEstimator::xProcessCtu(Pel **ppsCtusLuma)
 {
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
@@ -115,20 +109,23 @@ Void CuEstimator::xProcessCtu(Pel **ppsCtusLuma)
       UChar uhZIdx = (0xc & uiRsAddr >> 8) | (0x3 & uiRsAddr >> 4);
       uhZIdx = (0x9 & uhZIdx) | (0x4 & uhZIdx << 1) | (0x2 & uhZIdx >> 1);
 
-      m_ppCuMaxLuma[uiCtuRsAddr][uhZIdx] = max(psCtuLuma[uiRsAddr], m_ppCuMaxLuma[uiCtuRsAddr][uhZIdx]);
-      m_ppCuMinLuma[uiCtuRsAddr][uhZIdx] = min(psCtuLuma[uiRsAddr], m_ppCuMinLuma[uiCtuRsAddr][uhZIdx]);
+      m_ppCuMaxLuma[uiCtuRsAddr][uhZIdx] = std::max(psCtuLuma[uiRsAddr], m_ppCuMaxLuma[uiCtuRsAddr][uhZIdx]);
+      m_ppCuMinLuma[uiCtuRsAddr][uhZIdx] = std::min(psCtuLuma[uiRsAddr], m_ppCuMinLuma[uiCtuRsAddr][uhZIdx]);
     }
   }
 }
 
+/**
+ * 
+*/
 Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
 {
   if (uhDepth > TOTAL_DEPTH - 2) return;
 
   UInt uiCuWidth = 1 << (6 - uhDepth);
   UInt uiCuHeight = uiCuWidth;
-    
   UChar step = 1 << ((TOTAL_DEPTH - 2 - uhDepth) << 1);
+
   UInt uiCuCount = 0;
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
@@ -141,8 +138,8 @@ Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
       
       for (UChar i = uhZIdx; i < uhZIdx + step; ++i)
       {
-        maxLuma = max(m_ppCuMaxLuma[uiCtuRsAddr][i], maxLuma);
-        minLuma = min(m_ppCuMinLuma[uiCtuRsAddr][i], minLuma);
+        maxLuma = std::max(m_ppCuMaxLuma[uiCtuRsAddr][i], maxLuma);
+        minLuma = std::min(m_ppCuMinLuma[uiCtuRsAddr][i], minLuma);
       }
       Pel range = maxLuma - minLuma;
       if (range > RANGE_LOW_THRESHOLD)
@@ -168,5 +165,13 @@ Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
   }
 
   Bool *pIsSplit = m_cSessionHandler->infer(m_ppsCusLuma, uiCuCount, uhDepth);
-  std::cout << "pIsSplit..." << pIsSplit << std::endl;
+  for (UInt uiCuIdx = 0; uiCuIdx < uiCuCount; ++uiCuIdx)
+  {
+    if (!pIsSplit[uiCuIdx])
+    {
+      UInt uiCtuRsAddr = uiCuIdx >> ((TOTAL_DEPTH - 2) << 1);
+      UChar uhZIdx = uiCuIdx & ((1 << ((TOTAL_DEPTH - 2) << 1)) - 1);
+      memset(m_ppuhBestDepth[uiCtuRsAddr] + uhZIdx, uhDepth, sizeof(UChar) * step);
+    }
+  }
 }

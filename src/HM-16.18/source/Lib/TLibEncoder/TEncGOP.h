@@ -147,9 +147,14 @@ private:
   SEIEncoder              m_seiEncoder;
   TComPicYuv*             m_pcDeblockingTempPicYuv;
   Int                     m_DBParam[MAX_ENCODER_DEBLOCKING_QUALITY_LAYERS][4];   //[layer_id][0: available; 1: bDBDisabled; 2: Beta Offset Div2; 3: Tc Offset Div2;]
+
 #if _CU_MODE_INPUT || _CU_MODE_OUTPUT
-  CuModeIO*               m_pcCuModeIO;
+  CuModeIO*               m_pcCuModeIO;  
 #endif
+#if _CU_MODE_INPUT
+  UChar **m_ppuhCurrPicBestDepth;
+#endif
+
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -186,6 +191,10 @@ public:
   TEncAnalyze& getAnalyzeIData()   { return m_gcAnalyzeI; }
   TEncAnalyze& getAnalyzePData()   { return m_gcAnalyzeP; }
   TEncAnalyze& getAnalyzeBData()   { return m_gcAnalyzeB; }
+
+#if _CU_MODE_INPUT
+  UChar **getCurrPicBestDepth() const { return m_ppuhCurrPicBestDepth; }
+#endif
 
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }

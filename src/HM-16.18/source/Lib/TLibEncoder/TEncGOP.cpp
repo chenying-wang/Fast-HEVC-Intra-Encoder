@@ -1557,7 +1557,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     std::vector<TComOutputBitstream> substreamsOut(numSubstreams);
 
 #if _CU_MODE_INPUT
-    m_pcCuModeIO->read(pcPic);
+    m_ppuhCurrPicBestDepth = m_pcCuModeIO->read(pcPic);
 #endif
 
     // now compress (trial encode) the various slice segments (slices, and dependent slices)

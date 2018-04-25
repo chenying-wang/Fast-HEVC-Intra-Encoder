@@ -65,7 +65,7 @@ public:
   CuModeIO(IOMode mode);
   virtual ~CuModeIO();
   Void init(const std::string &filename, const Int iNumPictures, const Int iPicWidth, const Int iPicHeight, const UInt uiMaxCuWidth, const UInt uiMaxCuHeight, const UInt uiMaxTotalCUDepth);
-  Void read(TComPic *&pcPic);
+  UChar **read(TComPic *&pcPic);
   Void write(TComPic *&pcPic);
 };
 

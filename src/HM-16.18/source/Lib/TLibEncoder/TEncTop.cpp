@@ -248,7 +248,8 @@ Void TEncTop::init(Bool isFieldCoding)
   m_iMaxRefPicNum = 0;
 
 #if _CU_MODE_INPUT || _CU_MODE_OUTPUT
-  m_pcCuModeIO->init(inputFilename, m_framesToBeEncoded, m_iSourceWidth, m_iSourceHeight,
+  m_pcCuModeIO->init(inputFilename,
+    m_framesToBeEncoded, m_iSourceWidth, m_iSourceHeight,
     m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth);
 #endif
 }

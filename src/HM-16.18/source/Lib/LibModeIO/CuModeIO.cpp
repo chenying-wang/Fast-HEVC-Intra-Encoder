@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
-#include <memory.h>
+#include <memory>
 
 #include "CuModeIO.h"
 #include "CuEstimator.h"
@@ -55,7 +55,7 @@ Void CuModeIO::init(const std::string &filename,
   m_uiNumPartInCtuHeight = 1 << m_uiMaxTotalCuDepth;
 
   m_psPicCuMode = new PicCuMode();
-  m_psPicCuMode->psCuMode = new CuMode[m_uiFrameWidthInCtus * m_uiFrameHeightInCtus];
+  m_psPicCuMode->psCuMode = new CuMode[m_uiNumOfCtus];
 
   if (m_mode == IN)
   {
@@ -76,20 +76,19 @@ Void CuModeIO::init(const std::string &filename,
 /**
  * Read all CU Mode of a picture
 */
-Void CuModeIO::read(TComPic *&pcPic)
+UChar **CuModeIO::read(TComPic *&pcPic)
 {
   if (pcPic->getSlice(0)->getSliceType() != I_SLICE)
   {
     std::cerr << "WARNING: POC: " << pcPic->getPOC() << " is not I_SLICE!";
-    return;
+    return NULL;
   }
-  
-  m_psPicCuMode->uiPOC = pcPic->getPOC();
 
+  m_psPicCuMode->uiPOC = pcPic->getPOC();
   TComPicYuv *pcPicYuv = pcPic->getPicYuvTrueOrg();
 
   const UInt stride = pcPicYuv->getStride(COMPONENT_Y);
-  // const CuMode *cuMode = m_psPicCuMode->psCuMode;
+  CuMode *cuMode = m_psPicCuMode->psCuMode;
 
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
@@ -103,6 +102,17 @@ Void CuModeIO::read(TComPic *&pcPic)
 
   UChar **pphBestDepth = m_cCuEstimator->estimateCtu(m_ppsCtuLuma);
   std::cout << "pphBestDepth..." << pphBestDepth << std::endl;
+
+  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
+  {
+    for (UInt uiZIdx = 0; uiZIdx < m_uiNumPartInCtuWidth * m_uiNumPartInCtuHeight; ++uiZIdx)
+    {
+      
+    }
+    std::cout << std::endl;
+  }
+
+  return pphBestDepth;
 }
 
 /**
@@ -125,7 +135,7 @@ Void CuModeIO::write(TComPic *&pcPic)
   const CuMode *cuMode = m_psPicCuMode->psCuMode;
 
   // for every ctu in frame
-  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiFrameWidthInCtus * m_uiFrameHeightInCtus; ++uiCtuRsAddr)
+  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
     Pel *pPelLuma = pcPicYuv->getAddr(COMPONENT_Y, uiCtuRsAddr);
 

@@ -4,20 +4,28 @@
 // #include "tensorflow/core/platform/env.h"
 // #include "tensorflow/core/public/session.h"
 
-using namespace std;
 // using namespace tensorflow;
 // using namespace tensorflow::ops;
 
+/**
+ * Constructor
+*/
 SessionHandler::SessionHandler()
 {
 
 }
 
+/**
+ * Destructor
+*/
 SessionHandler::~SessionHandler()
 {
 
 }
 
+/**
+ * 
+*/
 Bool *SessionHandler::infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth)
 {
   Bool *pIsSplit = new Bool[uiNumOfCus];
