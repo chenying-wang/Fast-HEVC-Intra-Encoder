@@ -2,7 +2,7 @@
 
 #include "TLibCommon/CommonDef.h"
 
-#include "SessionHandler.h"
+#include "SessionWrapper.h"
 
 #ifndef __CUESTIMATOR__
 #define __CUESTIMATOR__
@@ -15,20 +15,22 @@
 class CuEstimator
 {
 private:
-  SessionHandler *m_cSessionHandler;
+  SessionWrapper *m_cSessionWrapper;
 
   Int m_iPicWidth;
   Int m_iPicHeight;
-  UInt m_uiMaxCuWidth;
-  UInt m_uiMaxCuHeight;
+  UInt m_uiLogMaxCuWidth;
+  UInt m_uiLogMaxCuHeight;
   UInt m_uiMaxCuSize;
+  UInt m_uiFrameWidthInCtus;
+  UInt m_uiFrameHeightInCtus;
   UInt m_uiNumOfCtus;
 
   Pel **m_ppsCusLuma;
   UShort *m_pusCuIdx;
 
-  Pel **m_ppCuMaxLuma;
-  Pel **m_ppCuMinLuma;
+  Pel **m_ppsCuMaxLuma;
+  Pel **m_ppsCuMinLuma;
   UChar **m_ppuhBestDepth;
 
 protected:
@@ -38,8 +40,8 @@ protected:
 public:
   CuEstimator();
   virtual ~CuEstimator();
-  Void init(const Int iPicWidth, const Int iPicHeight, const UInt uiMaxCuWidth, const UInt uiMaxCuHeight, const UInt uiNumOfCtus);
-  UChar **estimateCtu(Pel **ppsCtusLuma);
+  Void init(const Int iPicWidth, const Int iPicHeight, const UInt uiLogMaxCuWidth, const UInt uiLogMaxCuHeight, const UInt uiFrameWidthInCtus, const UInt uiFrameHeightInCtus, const UInt uiNumOfCtus);
+  UChar **estimateCtus(Pel **ppsCtusLuma);
 };
 
 #endif // __CUESTIMATOR__

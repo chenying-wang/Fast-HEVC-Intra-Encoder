@@ -8,18 +8,20 @@
 // using namespace tensorflow;
 // using namespace tensorflow::ops;
 
-#ifndef __SESSIONHANDLER__
-#define __SESSIONHANDLER__
+#ifndef __SESSIONWRAPPER__
+#define __SESSIONWRAPPER__
 
-class SessionHandler
+class SessionWrapper
 {
 private:
   // ClientSession* session;
+  Bool *m_pbIsSplit;
 
 public:
-  SessionHandler();
-  virtual ~SessionHandler();
+  SessionWrapper();
+  virtual ~SessionWrapper();
+  Void init(UInt uiNumOfCus);
   Bool *infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth);
 };
 
-#endif // __SESSIONHANDLER__
+#endif // __SESSIONWRAPPER__

@@ -150,12 +150,12 @@
   <ItemGroup>
   	<ClCompile Include="..\..\source\Lib\LibModeIO\CuEstimator.cpp" />
     <ClCompile Include="..\..\source\Lib\LibModeIO\CuModeIO.cpp" />
-    <ClCompile Include="..\..\source\Lib\LibModeIO\SessionHandler.cpp" />
+    <ClCompile Include="..\..\source\Lib\LibModeIO\SessionWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
 	<ClCompile Include="..\..\source\Lib\LibModeIO\CuEstimator.h" />
     <ClInclude Include="..\..\source\Lib\LibModeIO\CuModeIO.h" />
-    <ClInclude Include="..\..\source\Lib\LibModeIO\SessionHandler.h" />
+    <ClInclude Include="..\..\source\Lib\LibModeIO\SessionWrapper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

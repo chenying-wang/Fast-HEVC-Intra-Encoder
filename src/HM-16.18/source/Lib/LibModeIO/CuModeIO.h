@@ -2,7 +2,6 @@
 #include <fstream>
 
 #include "TLibCommon/CommonDef.h"
-#include "TLibCommon/TComSlice.h"
 #include "TLibCommon/TComPic.h"
 
 #include "CuEstimator.h"
@@ -33,7 +32,9 @@ private:
   Int m_iPicWidth;
   Int m_iPicHeight;
   UInt m_uiMaxCuWidth;
+  UInt m_uiLogMaxCuWidth;
   UInt m_uiMaxCuHeight;
+  UInt m_uiLogMaxCuHeight;
   UInt m_uiMaxTotalCuDepth;
 
   UInt m_uiFrameWidthInCtus;

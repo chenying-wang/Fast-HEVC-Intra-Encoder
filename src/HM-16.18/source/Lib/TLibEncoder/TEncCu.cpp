@@ -41,10 +41,12 @@
 #include "TEncAnalyze.h"
 #include "TLibCommon/Debug.h"
 
+#include "LibModeIO/CuModeIO.h"
+#include "LibModeIO/CuEstimator.h"
+
 #include <cmath>
 #include <algorithm>
 using namespace std;
-
 
 //! \ingroup TLibEncoder
 //! \{
@@ -436,12 +438,10 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, 
 /** Compress a CU block recursively with enabling sub-CTU-level delta QP
  *  - for loop of QP value to compress the current CU with all possible QP
 */
-#if AMP_ENC_SPEEDUP
-#if _CU_MODE_INPUT
+#if AMP_ENC_SPEEDUP && _CU_MODE_INPUT
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth, const UChar* puhBestDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
-#else
+#elif AMP_ENC_SPEEDUP
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
-#endif
 #else
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth )
 #endif
@@ -521,9 +521,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   const Bool bBoundary = !( uiRPelX < sps.getPicWidthInLumaSamples() && uiBPelY < sps.getPicHeightInLumaSamples() );
 
-#if _CU_MODE_INPUT && 0
-  const Bool bSplit = uiDepth == puhBestDepth[rpcBestCU->getZorderIdxInCtu()];
-  if ( !bBoundary && !bSplit ) 
+#if _CU_MODE_INPUT
+  const UInt uiZIdx = rpcBestCU->getZorderIdxInCtu() >> 4;
+  const Bool bSplit = uiDepth < puhBestDepth[uiZIdx];
+  // std::cout << bSplit << std::endl;
+  // std::cout << "x..." << uiLPelX << " - " << uiRPelX << std::endl;
+  // std::cout << "y..." << uiTPelY << " - " << uiBPelY << std::endl;
+  // std::cout << uiDepth << ' ' << (UInt)puhBestDepth[uiZIdx] << std::endl << std::endl;
+  if ( !bSplit ) 
 #else
   if ( !bBoundary )
 #endif
@@ -854,8 +859,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
-#if _CU_MODE_INPUT && 0
-  const Bool bSubBranch = bBoundary || ( bSplit && !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) ) );
+#if _CU_MODE_INPUT
+  const Bool bSubBranch = bSplit || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 #else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 #endif

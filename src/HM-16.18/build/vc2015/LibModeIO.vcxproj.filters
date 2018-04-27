@@ -21,7 +21,7 @@
 	<ClCompile Include="..\..\source\Lib\LibModeIO\CuModeIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Lib\LibModeIO\SessionHandler.cpp">
+    <ClCompile Include="..\..\source\Lib\LibModeIO\SessionWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +32,7 @@
 	<ClInclude Include="..\..\source\Lib\LibModeIO\CuModeIO.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Lib\LibModeIO\SessionHandler.h">
+    <ClInclude Include="..\..\source\Lib\LibModeIO\SessionWrapper.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>

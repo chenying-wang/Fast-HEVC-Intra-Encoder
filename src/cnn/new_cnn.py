@@ -24,9 +24,8 @@ def _conv2d(input,
 			name = "weights",
 			shape = [filter_size[0], filter_size[1], input_channels, filters],
 			dtype = tf.float32,
-			initializer = tf.random_normal_initializer(
-				mean = 0.0,
-				stddev = 2 / input_size
+			initializer = tf.glorot_uniform_initializer(
+				dtype = tf.float32
 			)
 		)
 		conv = tf.nn.conv2d(
@@ -200,6 +199,28 @@ def _inception(input,
 
 	return output
 
+def _inception_64x64(input, input_channel, branch_channel, reduced_channel, name = None):
+	return _inception(
+		input = input,
+		width = 64,
+		height = 64,
+		input_channel = input_channel,
+		branch_channel = branch_channel,
+		reduced_channel = reduced_channel,
+		name = name
+	)
+
+def _inception_32x32(input, input_channel, branch_channel, reduced_channel, name = None):
+	return _inception(
+		input = input,
+		width = 32,
+		height = 32,
+		input_channel = input_channel,
+		branch_channel = branch_channel,
+		reduced_channel = reduced_channel,
+		name = name
+	)
+
 def _inception_16x16(input, input_channel, branch_channel, reduced_channel, name = None):
 	return _inception(
 		input = input,
@@ -230,11 +251,12 @@ def inference(features, size_index, keep_prob = 1.0):
 			x = features - 128
 		)
 
-		input_layer = tf.image.resize_images(
-			images = raw_input_layer_norm,
-			size = [64, 64],
-			method = tf.image.ResizeMethod.BICUBIC
-		)
+		# input_layer = tf.image.resize_images(
+		# 	images = raw_input_layer_norm,
+		# 	size = [64, 64],
+		# 	method = tf.image.ResizeMethod.BICUBIC
+		# )
+		input_layer = raw_input_layer_norm
 
 		size_onehot = tf.one_hot(
 			indices = size_index,
@@ -242,56 +264,67 @@ def inference(features, size_index, keep_prob = 1.0):
 			name = "size_onehot"
 		)
 
-	# Layer #1: 64x64x1 conv 7x7/2 64x64x12
+	# Layer #1: 16x16x1 conv 3x3/2 16x16x32
 	conv1 = _conv2d(
 		input = input_layer,
-		input_shape = [64, 64, 1],
-		filters = 12,
-		filter_size = [5, 5],
-		biases = True,
-		activation = True,
-		name = "conv1"
-	)
-	
-	# Pool #1: 64x64x12 max 3x3/2 32x32x12
-	pool1 = _max_pooling(
-		input = conv1,
-		pool_size = 3,
-		strides = 2,
-		name = "pool1"
-	)
-
-	# Layer #2: 32x32x12 conv 3x3/1 32x32x32
-	conv2 = _conv2d(
-		input = _conv2d(
-			input = pool1,
-			input_shape = [32, 32, 12],
-			filters = 12,
-			filter_size = [1, 1],
-			biases = True,
-			activation = True,
-			name = "conv2_reduced"
-		),
-		input_shape = [32, 32, 12],
+		input_shape = [16, 16, 1],
 		filters = 32,
 		filter_size = [3, 3],
 		biases = True,
 		activation = True,
-		name = "conv2"
+		name = "conv1"
 	)
 
+	# Layer #1: 64x64x1 conv 5x5/2 64x64x12
+	# conv1 = _conv2d(
+	# 	input = input_layer,
+	# 	input_shape = [64, 64, 1],
+	# 	filters = 12,
+	# 	filter_size = [5, 5],
+	# 	biases = True,
+	# 	activation = True,
+	# 	name = "conv1"
+	# )
+	
+	# Pool #1: 64x64x12 max 3x3/2 32x32x12
+	# pool1 = _max_pooling(
+	# 	input = conv1,
+	# 	pool_size = 3,
+	# 	strides = 2,
+	# 	name = "pool1"
+	# )
+
+	# Layer #2: 32x32x12 conv 3x3/1 32x32x32
+	# conv2 = _conv2d(
+	# 	input = _conv2d(
+	# 		input = pool1,
+	# 		input_shape = [32, 32, 12],
+	# 		filters = 12,
+	# 		filter_size = [1, 1],
+	# 		biases = True,
+	# 		activation = True,
+	# 		name = "conv2_reduced"
+	# 	),
+	# 	input_shape = [32, 32, 12],
+	# 	filters = 32,
+	# 	filter_size = [3, 3],
+	# 	biases = True,
+	# 	activation = True,
+	# 	name = "conv2"
+	# )
+
 	# Pool #2: 32x32x32 max 3x3/2 16x16x32
-	pool2 = _max_pooling(
-		input = conv2,
-		pool_size = 3,
-		strides = 2,
-		name = "pool2"
-	)
+	# pool2 = _max_pooling(
+	# 	input = conv2,
+	# 	pool_size = 3,
+	# 	strides = 2,
+	# 	name = "pool2"
+	# )
 
 	# Layer #3: 16x16x32 inception x2 16x16x90
 	with tf.variable_scope("inception3") as scope:
 		inception3a = _inception_16x16(
-			input = pool2,
+			input = conv1,
 			input_channel = 32,
 			branch_channel = [12, 24, 6, 6],
 			reduced_channel = [18, 3],
