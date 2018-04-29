@@ -25,7 +25,6 @@ GRAPH_FILENAME = "cnn_modle.pbtxt"
 CU_DEPTH = 2
 
 def train(size_index):
-	global_step = tf.Variable(initial_value = 1, trainable = False, name = "global_step")
 
 	with tf.variable_scope("input") as scope:
 		iterators = data.Dataset(size_index).get_train().repeat(EPOCH).batch(BATCH_SIZE).make_initializable_iterator()
@@ -35,10 +34,12 @@ def train(size_index):
 			tensor = raw_features,
 			shape = [-1, data.FEATURE_HEIGHT[size_index], data.FEATURE_WIDTH[size_index], 1]
 		)
-
-	logits, softmax = new_cnn.infer(features, size_index, KEEP_PROB)
+	
+	with tf.variable_scope("main") as scope:
+		logits, softmax = new_cnn.infer(features, size_index, KEEP_PROB)
 
 	with tf.variable_scope("train") as scope:
+		global_step = tf.Variable(initial_value = 1, trainable = False, name = "global_step")
 		pred = tf.argmax(logits, 1)
 
 		onehot_lables = tf.one_hot(indices = labels, depth = 2, dtype = tf.int64)
@@ -65,15 +66,13 @@ def train(size_index):
 		)
 		train_batch = optimizer.minimize(loss, global_step = global_step)
 
-	tf.summary.scalar("loss", loss, family = "train")
-	tf.summary.scalar("accuracy", accuracy, family = "train")
-	merged = tf.summary.merge_all()
-
-	summary_writer = tf.summary.FileWriter(TRAINING_LOG_DIR, tf.get_default_graph())
-
-	saver = tf.train.Saver()
+		tf.summary.scalar("loss", loss, family = "train")
+		tf.summary.scalar("accuracy", accuracy, family = "train")
+		merged = tf.summary.merge_all()
+		summary_writer = tf.summary.FileWriter(TRAINING_LOG_DIR, tf.get_default_graph())
 
 	with tf.Session() as sess:
+		saver = tf.train.Saver()
 		tf.global_variables_initializer().run()
 		iterators.initializer.run()
 

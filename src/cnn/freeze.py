@@ -21,7 +21,8 @@ def freeze():
 		filename_tensor_name = "DEPRECATED",
 		output_graph = OUTPUT_GRAPH,
 		clear_devices = True,
-		initializer_nodes = "")
+		initializer_nodes = ""
+	)
 
 def main(unused_argv):
 	freeze()

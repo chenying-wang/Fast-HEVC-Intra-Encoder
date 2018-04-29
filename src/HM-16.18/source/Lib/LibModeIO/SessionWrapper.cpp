@@ -1,18 +1,24 @@
 #include <iostream>
 
-#include "SessionWrapper.h"
-// #include "tensorflow/core/platform/env.h"
-// #include "tensorflow/core/public/session.h"
+#include "tensorflow/core/lib/core/status.h"
+#include "tensorflow/core/platform/env.h"
+#include "tensorflow/core/public/session.h"
+#include "tensorflow/core/public/session_options.h"
 
-// using namespace tensorflow;
-// using namespace tensorflow::ops;
+#include "SessionWrapper.h"
+
+using namespace tensorflow;
 
 /**
  * Constructor
 */
 SessionWrapper::SessionWrapper()
 {
-
+  Status status = NewSession(SessionOptions(), &m_pcSession);
+  if (!status.ok())
+  {
+    std::cout << status.ToString() << std::endl;
+  }
 }
 
 /**
@@ -20,12 +26,24 @@ SessionWrapper::SessionWrapper()
 */
 SessionWrapper::~SessionWrapper()
 {
+  m_pcSession -> Close();
+
   delete[] m_pbIsSplit;
 }
 
+/**
+ * Initialize
+*/
 Void SessionWrapper::init(UInt uiNumOfCus)
 {
   m_pbIsSplit = new Bool[uiNumOfCus];
+
+  // tensorflow::GraphDef graph_def;
+  // tensorflow::Status status = tensorflow::ReadBinaryProto(tensorflow::Env::Default(), "../../cnn/.tmp/frozen_modle.pb", &graph_def);
+  // if (!status.ok()) {
+  //   std::cout << status.ToString() << std::endl;
+  //   return;
+  // }
 }
 
 /**

@@ -1,12 +1,11 @@
 #include <iostream>
 
+#include "tensorflow/core/lib/core/status.h"
+#include "tensorflow/core/platform/env.h"
+#include "tensorflow/core/public/session.h"
+#include "tensorflow/core/public/session_options.h"
+
 #include "TLibCommon/CommonDef.h"
-
-// #include "tensorflow/core/platform/env.h"
-// #include "tensorflow/core/public/session.h"
-
-// using namespace tensorflow;
-// using namespace tensorflow::ops;
 
 #ifndef __SESSIONWRAPPER__
 #define __SESSIONWRAPPER__
@@ -14,7 +13,7 @@
 class SessionWrapper
 {
 private:
-  // ClientSession* session;
+  tensorflow::Session *m_pcSession;
   Bool *m_pbIsSplit;
 
 public:
