@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 import data
-import cnn
+import new_cnn
 
 EVAL_LOG_DIR = "./.tmp/eval"
 SAMPLE_SIZE = 81000
@@ -20,7 +20,7 @@ def eval(depth):
 		)
 
 	size_index = tf.convert_to_tensor(depth * np.ones([BATCH_SIZE]), dtype = tf.int32)
-	logits, softmax = cnn.inference(features, size_index)
+	logits, softmax = new_cnn.infer(features, size_index)
 	pred = tf.argmax(logits, 1)
 	
 	accuracy = tf.reduce_mean(tf.cast(

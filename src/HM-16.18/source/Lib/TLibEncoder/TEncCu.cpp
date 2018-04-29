@@ -524,10 +524,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if _CU_MODE_INPUT
   const UInt uiZIdx = rpcBestCU->getZorderIdxInCtu() >> 4;
   const Bool bSplit = uiDepth < puhBestDepth[uiZIdx];
-  // std::cout << bSplit << std::endl;
-  // std::cout << "x..." << uiLPelX << " - " << uiRPelX << std::endl;
-  // std::cout << "y..." << uiTPelY << " - " << uiBPelY << std::endl;
-  // std::cout << uiDepth << ' ' << (UInt)puhBestDepth[uiZIdx] << std::endl << std::endl;
   if ( !bSplit ) 
 #else
   if ( !bBoundary )
@@ -859,13 +855,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
-#if _CU_MODE_INPUT
-  const Bool bSubBranch = bSplit || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
-#else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
-#endif
 
+#if _CU_MODE_INPUT
+  if( bSplit || bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
+#else
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
+#endif
   {
     // further split
     Double splitTotalCost = 0;

@@ -140,7 +140,7 @@
 #define VECTOR_CODING__DISTORTION_CALCULATIONS            0 ///< enable vector coding for distortion calculations   0 (default if SSE not possible) disable SSE vector coding. Should not affect RD costs/decisions. Code back-ported from JEM2.0.
 #endif
 
-#define _CU_MODE_INPUT                                    0
+#define _CU_MODE_INPUT                                    1
 #define _CU_MODE_OUTPUT                                   0
 
 // ====================================================================================================================

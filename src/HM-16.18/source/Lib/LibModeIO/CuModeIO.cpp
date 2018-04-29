@@ -22,12 +22,22 @@ CuModeIO::CuModeIO(IOMode mode) :
 */
 CuModeIO::~CuModeIO()
 {
-  if (m_mode == IN) delete m_cCuEstimator;
-  if (m_mode == OUT)
+  delete m_cCuEstimator;
+
+  if (m_mode == IN)
   {
-  delete[] m_psPicCuMode->psCuMode;
-  delete[] m_psPicCuMode;
+    for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
+    {
+      delete[] m_ppsCtuLuma[uiCtuRsAddr];
+    }
+    delete[] m_ppsCtuLuma;
   }
+  else if (m_mode == OUT)
+  {
+    delete[] m_psPicCuMode->psCuMode;
+  }
+
+  delete[] m_psPicCuMode;
 }
 
 /**
@@ -148,17 +158,6 @@ Void CuModeIO::write(TComPic *&pcPic)
 
     // if ((UInt)cuMode[uiCtuRsAddr].puhDepth[0] == 0) continue;
     
-    // std::cout << "CTU Raster Idx: " << uiCtuRsAddr << std::endl;
-    // for(UInt uiRow = 0; uiRow < m_uiMaxCuHeight; ++uiRow)
-    // {
-    //   UInt offset = uiRow * stride;
-    //   for(UInt uiCol = 0; uiCol < m_uiMaxCuWidth; ++uiCol)
-    //   {
-    //     std::cout << std::setw(3) << pPelLuma[offset + uiCol] << ' ';
-    //   }
-    //   std::cout << std::endl;
-    // }
-
     // for every partition in ctu
     // for (UInt uiRsIdx = 0; uiRsIdx < m_uiNumPartInCtuWidth * m_uiNumPartInCtuHeight; ++uiRsIdx)
     // {
