@@ -21,7 +21,7 @@ enum IOMode
 class CuModeIO
 {
 private:
-  CuEstimator* m_cCuEstimator;
+  CuEstimator *m_pcCuEstimator;
   
   fstream m_file;
   std::string m_filename;

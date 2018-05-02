@@ -1,3 +1,4 @@
+import sys
 import tensorflow as tf
 import numpy as np
 
@@ -5,38 +6,36 @@ import data
 import cnn
 import new_cnn
 
-TRAINING_LOG_DIR = "./.tmp/train"
 EPOCH = 1
 SAMPLE_SIZE = 51520000
-# SAMPLE_SIZE = 32
 BATCH_SIZE = 16
 
 INIT_LEARNING_RATE = 0.001
 DECAY_STEPS = 50000
 DECAY_RATE = 0.98
-
 KEEP_PROB = 0.6
 
-CKPT_PATH = "./.tmp/"
-CKPT_PREFIX = "training.ckpt"
+CKPT_PATH = lambda size_index: "./.tmp/" + str(size_index) + "/"
+CKPT_PREFIX = lambda size_index: "training_" + str(size_index) + ".ckpt"
 CKPT_STEP = 1000
-GRAPH_FILENAME = "cnn_modle.pbtxt"
-
-CU_DEPTH = 2
+GRAPH_FILENAME = lambda size_index: "cnn_modle_" + str(size_index) + ".pbtxt"
+TRAINING_LOG_DIR = lambda size_index: CKPT_PATH(size_index) + "train_" + str(size_index) + "/"
 
 def train(size_index):
 
 	with tf.variable_scope("input") as scope:
 		iterators = data.Dataset(size_index).get_train().repeat(EPOCH).batch(BATCH_SIZE).make_initializable_iterator()
 		raw_features, labels = iterators.get_next()
+
+		raw_features = tf.identity(raw_features, name = "raw_features")
 		
 		features = tf.reshape(
 			tensor = raw_features,
-			shape = [-1, data.FEATURE_HEIGHT[size_index], data.FEATURE_WIDTH[size_index], 1]
+			shape = [-1, data.FEATURE_HEIGHT[size_index], data.FEATURE_WIDTH[size_index], 1],
+			name = "features"
 		)
 	
-	with tf.variable_scope("main") as scope:
-		logits, softmax = new_cnn.infer(features, size_index, KEEP_PROB)
+	logits, softmax = new_cnn.infer(features, size_index, KEEP_PROB)
 
 	with tf.variable_scope("train") as scope:
 		global_step = tf.Variable(initial_value = 1, trainable = False, name = "global_step")
@@ -69,17 +68,17 @@ def train(size_index):
 		tf.summary.scalar("loss", loss, family = "train")
 		tf.summary.scalar("accuracy", accuracy, family = "train")
 		merged = tf.summary.merge_all()
-		summary_writer = tf.summary.FileWriter(TRAINING_LOG_DIR, tf.get_default_graph())
+		summary_writer = tf.summary.FileWriter(TRAINING_LOG_DIR(size_index), tf.get_default_graph())
 
 	with tf.Session() as sess:
 		saver = tf.train.Saver()
 		tf.global_variables_initializer().run()
 		iterators.initializer.run()
 
-		tf.train.write_graph(sess.graph, CKPT_PATH, GRAPH_FILENAME)
+		tf.train.write_graph(sess.graph, CKPT_PATH(size_index), GRAPH_FILENAME(size_index))
 
-		if tf.train.get_checkpoint_state(CKPT_PATH):
-			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH))
+		if tf.train.get_checkpoint_state(CKPT_PATH(size_index)):
+			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH(size_index)))
 
 		for _ in range (int(EPOCH * SAMPLE_SIZE / BATCH_SIZE)):
 			_global_step = sess.run(global_step)
@@ -94,7 +93,7 @@ def train(size_index):
 			if _global_step % CKPT_STEP == 0:
 				saver.save(
 					sess = sess,
-					save_path = CKPT_PATH + CKPT_PREFIX,
+					save_path = CKPT_PATH(size_index) + CKPT_PREFIX(size_index),
 					global_step = _global_step
 				)
 				print("Model Saved")
@@ -104,7 +103,7 @@ def train(size_index):
 	summary_writer.close()
 
 def main(unused_argv):
-	train(size_index = CU_DEPTH)
+	train(size_index = int(sys.argv[1]))
 
 if __name__ == "__main__":
 	tf.app.run()

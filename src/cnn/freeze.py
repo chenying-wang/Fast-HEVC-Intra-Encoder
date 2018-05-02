@@ -1,31 +1,28 @@
+import sys
 import tensorflow as tf
 from tensorflow.python.tools.freeze_graph import freeze_graph
 
 import train
 
-STEPS = 229000
-
-INPUT_GRAPH = train.CKPT_PATH + train.GRAPH_FILENAME
-INPUT_CKPT = train.CKPT_PATH + train.CKPT_PREFIX + "-" + str(STEPS)
-
-OUTPUT_GRAPH = train.CKPT_PATH + "frozen_graph.pb"
-OUTPUT_NODE = "softmax/softmax"
-
-def freeze():
-	freeze_graph(input_graph = INPUT_GRAPH,
+def freeze(size_index, steps):
+	freeze_graph(
+		input_graph = train.CKPT_PATH(size_index) + train.GRAPH_FILENAME(size_index),
         input_saver = "",
         input_binary = False,
-		input_checkpoint = INPUT_CKPT,
-		output_node_names = OUTPUT_NODE,
+		input_checkpoint = train.CKPT_PATH(size_index) + train.CKPT_PREFIX(size_index) + "-" + str(steps),
+		output_node_names = "softmax/softmax",
 		restore_op_name = "DEPRECATED",
 		filename_tensor_name = "DEPRECATED",
-		output_graph = OUTPUT_GRAPH,
+		output_graph = train.CKPT_PATH(size_index) + "frozen_graph_" + str(size_index) + ".pb",
 		clear_devices = True,
 		initializer_nodes = ""
 	)
 
 def main(unused_argv):
-	freeze()
+	freeze(
+		size_index = int(sys.argv[1]),
+		steps = int(sys.argv[2])
+	)
 
 if __name__ == "__main__":
 	tf.app.run()

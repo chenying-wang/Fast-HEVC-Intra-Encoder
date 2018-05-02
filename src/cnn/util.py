@@ -1,11 +1,13 @@
 import tensorflow as tf
 
 def activate(features, name = None):
+
 	return tf.nn.leaky_relu(
 		features = features,
 		alpha = 0.01,
 		name = name
 	)
+
 
 def conv2d(input,
 		   input_shape,
@@ -57,6 +59,7 @@ def conv2d(input,
 	
 	return output
 
+
 def max_pooling(input,
 				pool_size,
 				strides,
@@ -74,6 +77,7 @@ def max_pooling(input,
 
 	return output
 
+
 def avg_pooling(input,
 				pool_size,
 				strides,
@@ -90,6 +94,7 @@ def avg_pooling(input,
 		)
 
 	return output
+
 
 def fc_with_dropout(input,
 					input_size,
@@ -120,6 +125,7 @@ def fc_with_dropout(input,
 	
 	return output
 
+
 def inception(input,
 			  width,
 			  height,
@@ -136,7 +142,7 @@ def inception(input,
 			filter_size = [1, 1],
 			biases = True,
 			activation = True,
-			name = name + "_1x1"
+			name = "1x1"
 		)
 		branch1 = conv2d(
 			input = conv2d(
@@ -146,14 +152,14 @@ def inception(input,
 				filter_size = [1, 1],
 				biases = True,
 				activation = True,
-				name = name + "_3x3_reduced"
+				name = "3x3_reduced"
 			),
 			input_shape = [width, height, reduced_channel[1]],
 			filters = branch_channel[1],
 			filter_size = [3, 3],
 			biases = True,
 			activation = True,
-			name = name + "_3x3"
+			name = "3x3"
 		)
 		branch2 = conv2d(
 			input = conv2d(
@@ -164,49 +170,51 @@ def inception(input,
 					filter_size = [1, 1],
 					biases = True,
 					activation = True,
-					name = name + "_5x5_reduced"
+					name = "5x5_reduced_0"
 				),
 				input_shape = [width, height, reduced_channel[1]],
 				filters = branch_channel[2],
 				filter_size = [3, 3],
 				biases = True,
 				activation = True,
-				name = name + "_5x5_0"
+				name = "5x5_reduced_1"
 			),
 			input_shape = [width, height, branch_channel[2]],
 			filters = branch_channel[2],
 			filter_size = [3, 3],
 			biases = True,
 			activation = True,
-			name = name + "_5x5"
+			name = "5x5"
 		)
 		branch3 = conv2d(
 			input = max_pooling(
 				input = input,
 				pool_size = 3,
 				strides = 1,
-				name = name + "_pool"
+				name = "pool"
 			),
 			input_shape = [width, height, input_channel],
 			filters = branch_channel[3],
 			filter_size = [1, 1],
 			biases = True,
 			activation = True,
-			name = name + "_pool_reduced"
+			name = "pool_reduced"
 		)
 		output = tf.concat(
 			values = [branch0, branch1, branch2, branch3],
 			axis = -1,
-			name = name
+			name = "concat"
 		)
 
 	return output
+
 
 def inception_64x64(input,
 					input_channel,
 					branch_channel,
 					reduced_channel,
 					name = None):
+
 	return inception(
 		input = input,
 		width = 64,
@@ -217,11 +225,13 @@ def inception_64x64(input,
 		name = name
 	)
 
+
 def inception_32x32(input,
 					input_channel,
 					branch_channel,
 					reduced_channel,
 					name = None):
+
 	return inception(
 		input = input,
 		width = 32,
@@ -232,11 +242,13 @@ def inception_32x32(input,
 		name = name
 	)
 
+
 def inception_16x16(input,
 					input_channel,
 					branch_channel,
 					reduced_channel,
 					name = None):
+
 	return inception(
 		input = input,
 		width = 16,
@@ -247,11 +259,13 @@ def inception_16x16(input,
 		name = name
 	)
 
+
 def inception_8x8(input,
 				  input_channel,
 				  branch_channel,
 				  reduced_channel,
 				  name = None):
+
 	return inception(
 		input = input,
 		width = 8,

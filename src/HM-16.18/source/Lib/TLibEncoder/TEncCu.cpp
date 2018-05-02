@@ -802,6 +802,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       }
     }
 
+#if !_CU_MODE_INPUT
     if( rpcBestCU->getTotalCost()!=MAX_DOUBLE )
     {
       m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_NEXT_BEST]);
@@ -812,6 +813,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       rpcBestCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcBestCU->getTotalBits(), rpcBestCU->getTotalDistortion() );
       m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_NEXT_BEST]);
     }
+#endif
   }
 
   // copy original YUV samples to PCM buffer
@@ -864,7 +866,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
   {
     // further split
+#if !_CU_MODE_INPUT
     Double splitTotalCost = 0;
+#endif
 
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
@@ -884,6 +888,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
         if( ( pcSubBestPartCU->getCUPelX() < sps.getPicWidthInLumaSamples() ) && ( pcSubBestPartCU->getCUPelY() < sps.getPicHeightInLumaSamples() ) )
         {
+#if !_CU_MODE_INPUT
           if ( 0 == uiPartUnitIdx) //initialize RD with previous depth buffer
           {
             m_pppcRDSbacCoder[uhNextDepth][CI_CURR_BEST]->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
@@ -892,6 +897,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           {
             m_pppcRDSbacCoder[uhNextDepth][CI_CURR_BEST]->load(m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]);
           }
+#endif
 
 #if AMP_ENC_SPEEDUP
           DEBUG_STRING_NEW(sChild)
@@ -916,12 +922,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth );
 #endif
 
+
           rpcTempCU->copyPartFrom( pcSubBestPartCU, uiPartUnitIdx, uhNextDepth );         // Keep best part data to current temporary data.
           xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
+#if !_CU_MODE_INPUT
           if ( m_pcEncCfg->getLumaLevelToDeltaQPMapping().isEnabled() && pps.getMaxCuDQPDepth() >= 1 )
           {
             splitTotalCost += pcSubBestPartCU->getTotalCost();
           }
+#endif
         }
         else
         {
@@ -930,6 +939,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         }
       }
 
+#if !_CU_MODE_INPUT
       m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]);
       if( !bBoundary )
       {
@@ -1009,7 +1019,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           rpcBestCU->getTotalCost()=MAX_DOUBLE;
         }
       }
-
+#else
+      rpcTempCU->getTotalCost() = 0;
+#endif
       xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTempDebug) DEBUG_STRING_PASS_INTO(false) ); // RD compare current larger prediction
                                                                                                                                                        // with sub partitioned prediction.
     }

@@ -14,7 +14,7 @@ CuModeIO::CuModeIO(IOMode mode) :
   m_iEncodedPictures(0)
 {
   m_mode = mode;
-  m_cCuEstimator = new CuEstimator();
+  m_pcCuEstimator = new CuEstimator();
 }
 
 /**
@@ -22,7 +22,7 @@ CuModeIO::CuModeIO(IOMode mode) :
 */
 CuModeIO::~CuModeIO()
 {
-  delete m_cCuEstimator;
+  delete m_pcCuEstimator;
 
   if (m_mode == IN)
   {
@@ -35,9 +35,8 @@ CuModeIO::~CuModeIO()
   else if (m_mode == OUT)
   {
     delete[] m_psPicCuMode->psCuMode;
+    delete[] m_psPicCuMode;
   }
-
-  delete[] m_psPicCuMode;
 }
 
 /**
@@ -66,13 +65,9 @@ Void CuModeIO::init(const std::string &filename,
 
   m_uiMaxTotalCuDepth = uiMaxTotalCUDepth;
 
-  m_uiFrameWidthInCtus = (m_iPicWidth >> m_uiLogMaxCuWidth) + (m_iPicWidth % m_uiMaxCuWidth ? 1 :0 );
-  m_uiFrameHeightInCtus = (m_iPicHeight >> m_uiLogMaxCuHeight) + (m_iPicHeight % m_uiMaxCuHeight ? 1 : 0);
+  m_uiFrameWidthInCtus = (m_iPicWidth >> m_uiLogMaxCuWidth) + (m_iPicWidth & ((1 << m_uiLogMaxCuWidth) - 1) ? 1 :0 );
+  m_uiFrameHeightInCtus = (m_iPicHeight >> m_uiLogMaxCuHeight) + (m_iPicHeight & ((1 << m_uiLogMaxCuHeight) - 1) ? 1 : 0);
   m_uiNumOfCtus = m_uiFrameWidthInCtus * m_uiFrameHeightInCtus;
-  m_uiNumPartInCtuWidth = 1 << m_uiMaxTotalCuDepth;
-  m_uiNumPartInCtuHeight = 1 << m_uiMaxTotalCuDepth;
-
-  m_psPicCuMode = new PicCuMode();
 
   if (m_mode == IN)
   {
@@ -81,10 +76,11 @@ Void CuModeIO::init(const std::string &filename,
     {
       m_ppsCtuLuma[uiCtuRsAddr] = new Pel[1 << (m_uiLogMaxCuWidth + m_uiLogMaxCuHeight)];
     }
-    m_cCuEstimator->init(m_iPicWidth, m_iPicHeight, m_uiLogMaxCuWidth, m_uiLogMaxCuHeight, m_uiFrameWidthInCtus, m_uiFrameHeightInCtus, m_uiNumOfCtus);
+    m_pcCuEstimator->init(m_iPicWidth, m_iPicHeight, m_uiLogMaxCuWidth, m_uiLogMaxCuHeight, m_uiMaxTotalCuDepth, m_uiFrameWidthInCtus, m_uiFrameHeightInCtus, m_uiNumOfCtus);
   }
   else if (m_mode == OUT)
   {
+    m_psPicCuMode = new PicCuMode();
     m_file.open(m_filename, fstream::out);
     m_psPicCuMode->psCuMode = new CuMode[m_uiNumOfCtus];
   }
@@ -94,17 +90,17 @@ Void CuModeIO::init(const std::string &filename,
  * Read all CU Mode of a picture
 */
 UChar **CuModeIO::read(TComPic *&pcPic)
-{
+{ 
   if (pcPic->getSlice(0)->getSliceType() != I_SLICE)
   {
     std::cerr << "WARNING: POC: " << pcPic->getPOC() << " is not I_SLICE!";
     return NULL;
   }
 
-  m_psPicCuMode->uiPOC = pcPic->getPOC();
   TComPicYuv *pcPicYuv = pcPic->getPicYuvTrueOrg();
 
   const UInt stride = pcPicYuv->getStride(COMPONENT_Y);
+  const UChar uhCtuRowSize = sizeof(Pel) << m_uiLogMaxCuWidth;
 
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
@@ -112,11 +108,11 @@ UChar **CuModeIO::read(TComPic *&pcPic)
     for (UInt uiRow = 0; uiRow < m_uiMaxCuHeight; ++uiRow)
     {
       UInt offset = uiRow * stride;
-      memcpy(m_ppsCtuLuma[uiCtuRsAddr] + (uiRow << m_uiLogMaxCuWidth), ctuLumaAddr + offset, sizeof(Pel) << m_uiLogMaxCuWidth);
+      memcpy(m_ppsCtuLuma[uiCtuRsAddr] + (uiRow << m_uiLogMaxCuWidth), ctuLumaAddr + offset, uhCtuRowSize);
     }
   }
 
-  return m_cCuEstimator->estimateCtus(m_ppsCtuLuma);
+  return m_pcCuEstimator->estimateCtus(m_ppsCtuLuma);
 }
 
 /**
@@ -155,21 +151,8 @@ Void CuModeIO::write(TComPic *&pcPic)
 
     // write whether ctu split or not
     m_file << (UInt)cuMode[uiCtuRsAddr].puhDepth[0];
-
-    // if ((UInt)cuMode[uiCtuRsAddr].puhDepth[0] == 0) continue;
     
-    // for every partition in ctu
-    // for (UInt uiRsIdx = 0; uiRsIdx < m_uiNumPartInCtuWidth * m_uiNumPartInCtuHeight; ++uiRsIdx)
-    // {
-    //   UInt uiZIdx = g_auiRasterToZscan[uiRsIdx];
-    //   std::cout << std::setw(2) << (UInt)cuMode[uiCtuRsAddr].puhDepth[uiZIdx] << ' '
-    //     << std::setw(2) << (UInt)cuMode[uiCtuRsAddr].puhLumaIntraDir[uiZIdx] << ' '
-    //     << (cuMode[uiCtuRsAddr].pePartSize[0]==SIZE_2Nx2N ? "2N":"1N");
-    //   if ((uiRsIdx + 1) % m_uiNumPartInCtuWidth) std::cout << ' ';
-    //   else std::cout << std::endl;
-    // }
-
-    std::cout << std::endl;
+    m_file << std::endl;
   }
   ++m_iEncodedPictures;
 }
