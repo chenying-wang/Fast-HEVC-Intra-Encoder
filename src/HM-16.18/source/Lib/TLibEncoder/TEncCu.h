@@ -101,6 +101,10 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
 
+#if _CU_MODE_INPUT
+  UChar *m_puhBestDepth;
+#endif
+
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -129,11 +133,7 @@ public:
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx );
 #if AMP_ENC_SPEEDUP
-#if _CU_MODE_INPUT
-Void xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth, const UChar* puhBestDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
-#else
 Void xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
-#endif
 #else
   Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth        );
 #endif

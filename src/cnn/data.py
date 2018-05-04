@@ -6,11 +6,9 @@ FILENAME_SUFFIX = ".csv.gz"
 
 EVAL_DATA_BASE_DIR = "../../test_dataset/"
 EVAL_DATA_NAME = [
-	"BasketballDrive_1920x1080_50_16.csv.gz",
-	"BQTerrace_1920x1080_60_16.csv.gz",
-	"Cactus_1920x1080_50_16.csv.gz",
-	"Kimono_1920x1080_24_16.csv.gz",
-	"ParkScene_1920x1080_24_16.csv.gz"
+	"BasketballDrive_1920x1080_50_crop_64.csv.gz",
+	"BasketballDrive_1920x1080_50_crop_32.csv.gz",
+	"BasketballDrive_1920x1080_50_crop_16.csv.gz",
 ]
 
 FRAME_WIDTH = [1024, 2560, 4096]
@@ -26,10 +24,11 @@ SHUFFLE = True
 class Dataset:
 
 	def __init__(self, size_index):
+		self.size_index = size_index
 		self.width = FEATURE_WIDTH[size_index]
 		self.height = FEATURE_HEIGHT[size_index]
 		self.size = self.width * self.height
-		self.shuffle_buffer = int(2 * max(FRAME_WIDTH) / self.width * max(FRAME_HEIGHT) / self.height)
+		self.shuffle_buffer = 500
 
 	def _parse_line(self, line):
 		RECORD_DEFAULT = [[0.0] for i in range(self.size + 1)]
@@ -58,6 +57,6 @@ class Dataset:
 		return dataset.map(self._parse_line)
 
 	def get_eval(self):
-		data_filenames = [EVAL_DATA_BASE_DIR + EVAL_DATA_NAME[1]]
+		data_filenames = [EVAL_DATA_BASE_DIR + EVAL_DATA_NAME[self.size_index]]
 		dataset = tf.data.TextLineDataset(data_filenames, compression_type = "GZIP")
 		return dataset.map(self._parse_line)

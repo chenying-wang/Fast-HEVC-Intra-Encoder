@@ -7,8 +7,6 @@
 #ifndef __CUESTIMATOR__
 #define __CUESTIMATOR__
 
-#define NUMBER_OF_CU_TO_ESTIMATE (1 << ((m_uiMaxTotalCuDepth - 1) << 1))
-
 #define RANGE_LOW_THRESHOLD 40
 
 class CuEstimator
@@ -25,6 +23,7 @@ private:
   UInt m_uiFrameWidthInCtus;
   UInt m_uiFrameHeightInCtus;
   UInt m_uiNumOfCtus;
+  UChar m_uhNumOfCuToEst;
 
   Pel **m_ppsCusLuma;
   UShort *m_pusCuIdx;

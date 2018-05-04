@@ -11,15 +11,18 @@ SAMPLE_SIZE = 51520000
 BATCH_SIZE = 16
 
 INIT_LEARNING_RATE = 0.001
-DECAY_STEPS = 50000
-DECAY_RATE = 0.98
-KEEP_PROB = 0.6
+DECAY_STEPS = 10000
+DECAY_RATE = 0.99
+KEEP_PROB = 0.5
 
 CKPT_PATH = lambda size_index: "./.tmp/" + str(size_index) + "/"
-CKPT_PREFIX = lambda size_index: "training_" + str(size_index) + ".ckpt"
+CKPT_PREFIX = "training.ckpt"
 CKPT_STEP = 1000
-GRAPH_FILENAME = lambda size_index: "cnn_modle_" + str(size_index) + ".pbtxt"
-TRAINING_LOG_DIR = lambda size_index: CKPT_PATH(size_index) + "train_" + str(size_index) + "/"
+GRAPH_FILENAME = "cnn_modle.pbtxt"
+TRAINING_LOG_DIR = lambda size_index: CKPT_PATH(size_index) + "train/"
+
+LOSS_WEIGHTS_0 = [1.0, 1.0, 0.5]
+LOSS_WEIGHTS_1 = [0.2, 1.0, 1.0]
 
 def train(size_index):
 
@@ -41,11 +44,21 @@ def train(size_index):
 		global_step = tf.Variable(initial_value = 1, trainable = False, name = "global_step")
 		pred = tf.argmax(logits, 1)
 
-		onehot_lables = tf.one_hot(indices = labels, depth = 2, dtype = tf.int64)
-		loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
-			labels = onehot_lables,
-			logits = logits
-		))
+		# onehot_lables = tf.one_hot(indices = labels, depth = 2, dtype = tf.int64)
+		# loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+		# 	labels = onehot_lables,
+		# 	logits = logits
+		# ))
+		loss_weights = tf.scalar_mul(
+			scalar = LOSS_WEIGHTS_1[size_index] - LOSS_WEIGHTS_0[size_index],
+			x = tf.cast(labels, tf.float32)
+		)
+		loss_weights = loss_weights + LOSS_WEIGHTS_0[size_index]
+		loss = tf.losses.sparse_softmax_cross_entropy(
+			labels = labels,
+			logits = logits,
+			weights = loss_weights
+		)
 		
 		accuracy = tf.reduce_mean(tf.cast(
 			tf.equal(pred, labels)
@@ -75,7 +88,7 @@ def train(size_index):
 		tf.global_variables_initializer().run()
 		iterators.initializer.run()
 
-		tf.train.write_graph(sess.graph, CKPT_PATH(size_index), GRAPH_FILENAME(size_index))
+		tf.train.write_graph(sess.graph, CKPT_PATH(size_index), GRAPH_FILENAME)
 
 		if tf.train.get_checkpoint_state(CKPT_PATH(size_index)):
 			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH(size_index)))
@@ -93,7 +106,7 @@ def train(size_index):
 			if _global_step % CKPT_STEP == 0:
 				saver.save(
 					sess = sess,
-					save_path = CKPT_PATH(size_index) + CKPT_PREFIX(size_index),
+					save_path = CKPT_PATH(size_index) + CKPT_PREFIX,
 					global_step = _global_step
 				)
 				print("Model Saved")

@@ -69,6 +69,7 @@ Void CuEstimator::init(const Int iPicWidth,
   m_uiFrameWidthInCtus = uiFrameWidthInCtus;
   m_uiFrameHeightInCtus = uiFrameHeightInCtus;
   m_uiNumOfCtus = uiNumOfCtus;
+  m_uhNumOfCuToEst = 1 << ((m_uiMaxTotalCuDepth - 1) << 1);
 
   UInt uiMaxNumOfCus = m_uiNumOfCtus << ((m_uiMaxTotalCuDepth - 1) << 1);
   m_pusCuIdx = new UShort[uiMaxNumOfCus];
@@ -83,9 +84,9 @@ Void CuEstimator::init(const Int iPicWidth,
   m_ppuhBestDepth = new UChar*[m_uiNumOfCtus];
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
-    m_ppsCuMaxLuma[uiCtuRsAddr] = new Pel[NUMBER_OF_CU_TO_ESTIMATE];
-    m_ppsCuMinLuma[uiCtuRsAddr] = new Pel[NUMBER_OF_CU_TO_ESTIMATE];
-    m_ppuhBestDepth[uiCtuRsAddr] = new UChar[NUMBER_OF_CU_TO_ESTIMATE];
+    m_ppsCuMaxLuma[uiCtuRsAddr] = new Pel[m_uhNumOfCuToEst];
+    m_ppsCuMinLuma[uiCtuRsAddr] = new Pel[m_uhNumOfCuToEst];
+    m_ppuhBestDepth[uiCtuRsAddr] = new UChar[m_uhNumOfCuToEst];
   }
 
   m_puiCuWidth = new UInt[m_uiMaxTotalCuDepth];
@@ -105,9 +106,9 @@ Void CuEstimator::init(const Int iPicWidth,
   {
     m_puhRsAddrToRsIdx[uiRsAddr] = (0xc & uiRsAddr >> 8) | (0x3 & uiRsAddr >> 4);
   }
-  m_puhRsIdxToZIdx = new UChar[NUMBER_OF_CU_TO_ESTIMATE];
+  m_puhRsIdxToZIdx = new UChar[m_uhNumOfCuToEst];
   m_puhZIdxToRsIdx = m_puhRsIdxToZIdx;
-  for (UChar uhRsIdx = 0; uhRsIdx < NUMBER_OF_CU_TO_ESTIMATE;  ++uhRsIdx)
+  for (UChar uhRsIdx = 0; uhRsIdx < m_uhNumOfCuToEst;  ++uhRsIdx)
   {
     m_puhRsIdxToZIdx[uhRsIdx] = (0x9 & uhRsIdx) | (0x4 & uhRsIdx << 1) | (0x2 & uhRsIdx >> 1);
   }
@@ -124,9 +125,9 @@ UChar **CuEstimator::estimateCtus(Pel **ppsCtusLuma)
 {
   for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
   {
-    memset(m_ppsCuMaxLuma[uiCtuRsAddr], 0x0, NUMBER_OF_CU_TO_ESTIMATE * sizeof(Pel));
-    memset(m_ppsCuMinLuma[uiCtuRsAddr], 0x7f, NUMBER_OF_CU_TO_ESTIMATE * sizeof(Pel));
-    memset(m_ppuhBestDepth[uiCtuRsAddr], m_uiMaxTotalCuDepth, NUMBER_OF_CU_TO_ESTIMATE * sizeof(UChar));
+    memset(m_ppsCuMaxLuma[uiCtuRsAddr], 0x0, m_uhNumOfCuToEst * sizeof(Pel));
+    memset(m_ppsCuMinLuma[uiCtuRsAddr], 0x7f, m_uhNumOfCuToEst * sizeof(Pel));
+    memset(m_ppuhBestDepth[uiCtuRsAddr], m_uiMaxTotalCuDepth, m_uhNumOfCuToEst * sizeof(UChar));
   }
 
   xProcessCtu(ppsCtusLuma);
@@ -141,19 +142,19 @@ UChar **CuEstimator::estimateCtus(Pel **ppsCtusLuma)
     m_puiSum[depth] = 0;
   }
   
-  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
-  {
-    for (UChar uhZIdx = 0; uhZIdx < NUMBER_OF_CU_TO_ESTIMATE;  ++uhZIdx)
-    {
-      if (m_ppuhBestDepth[uiCtuRsAddr][uhZIdx] > 3) std::cout << m_ppuhBestDepth[uiCtuRsAddr][uhZIdx] << std::endl;
-      ++m_puiSum[m_ppuhBestDepth[uiCtuRsAddr][uhZIdx]];
-    }
-  }
+  // for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
+  // {
+  //   for (UChar uhZIdx = 0; uhZIdx < m_uhNumOfCuToEst;  ++uhZIdx)
+  //   {
+  //     if (m_ppuhBestDepth[uiCtuRsAddr][uhZIdx] > 3) std::cout << m_ppuhBestDepth[uiCtuRsAddr][uhZIdx] << std::endl;
+  //     ++m_puiSum[m_ppuhBestDepth[uiCtuRsAddr][uhZIdx]];
+  //   }
+  // }
 
-  for (UChar depth = 0; depth <= m_uiMaxTotalCuDepth; ++depth)
-  {
-    std::cout << "Depth " << (UInt)depth << "    " << m_puiSum[depth] << std::endl;
-  }
+  // for (UChar depth = 0; depth <= m_uiMaxTotalCuDepth; ++depth)
+  // {
+  //   std::cout << "Depth " << (UInt)depth << "    " << m_puiSum[depth] << std::endl;
+  // }
 
   return m_ppuhBestDepth;
 }
@@ -181,15 +182,13 @@ Void CuEstimator::xProcessCtu(Pel **ppsCtusLuma)
 */
 Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
 {
-  if (uhDepth > m_uiMaxTotalCuDepth - 1) return;
-
   UInt uiCuWidth = m_puiCuWidth[uhDepth];
   UInt uiCuHeight = m_puiCuHeight[uhDepth];
   UChar step = m_puhStep[uhDepth];
   UChar uhBestDepthSize = m_puhBestDepthSize[uhDepth];
 
   UInt uiCuCount = 0;
-  for (UChar uhZIdx = 0; uhZIdx < NUMBER_OF_CU_TO_ESTIMATE;  uhZIdx += step)
+  for (UChar uhZIdx = 0; uhZIdx < m_uhNumOfCuToEst;  uhZIdx += step)
   {
     UChar uhRsIdx = m_puhZIdxToRsIdx[uhZIdx];
     UInt uiCuOffsetX = (uhRsIdx & 0x3) << (m_uiLogMaxCuWidth - (m_uiMaxTotalCuDepth - 1));
@@ -237,5 +236,4 @@ Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
       memset(m_ppuhBestDepth[uiCtuRsAddr] + uhZIdx, uhDepth, uhBestDepthSize);
     }
   }
-
 }

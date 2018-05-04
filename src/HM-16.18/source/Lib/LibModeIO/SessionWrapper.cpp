@@ -27,16 +27,16 @@ SessionWrapper::~SessionWrapper()
 {
   delete[] m_pbIsSplit;
   delete[] m_puiCuSize;
-  // if (m_ppcSession != NULL)
-  // {
-  //   for (UChar uhDepth = 0; uhDepth < m_uhTotalDepth; ++uhDepth)
-  //   {
-  //     m_ppcSession[uhDepth]->Close();
-  //     delete m_ppcGraphDef[uhDepth];
-  //   }
-  //   delete[] m_ppcSession;
-  //   delete[] m_ppcGraphDef;
-  // }
+  if (m_ppcSession != NULL)
+  {
+    for (UChar uhDepth = 0; uhDepth < m_uhTotalDepth; ++uhDepth)
+    {
+      m_ppcSession[uhDepth]->Close();
+      delete m_ppcGraphDef[uhDepth];
+    }
+    delete[] m_ppcSession;
+    delete[] m_ppcGraphDef;
+  }
 }
 
 /**
@@ -64,8 +64,7 @@ Void SessionWrapper::init(UInt uiNumOfCus, UInt uiLogMaxCuWidth, UChar uhTotalDe
       return;
     }
 
-    auto filename = string("../cnn/.tmp/") + char(uhDepth + '0');    
-    filename += string("/frozen_graph_") + char(uhDepth + '0') + string(".pb");
+    auto filename = string("../cnn/.tmp/") + char(uhDepth + '0') + string("/frozen_graph.pb");
     m_ppcGraphDef[uhDepth] = new GraphDef();
     status = ReadBinaryProto(Env::Default(), filename, m_ppcGraphDef[uhDepth]);
     if (!status.ok())
@@ -88,7 +87,6 @@ Void SessionWrapper::init(UInt uiNumOfCus, UInt uiLogMaxCuWidth, UChar uhTotalDe
 */
 Bool *SessionWrapper::infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth)
 {
-  // To-Do: sess.run();
   UInt uiCuSize = m_puiCuSize[uhDepth];
   auto features_tensor = Tensor( DT_FLOAT, TensorShape({uiNumOfCus, uiCuSize}) );
   auto features_tensor_map = features_tensor.tensor<float, 2>();
@@ -103,15 +101,16 @@ Bool *SessionWrapper::infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth)
   std::vector<std::pair<string, Tensor>> inputs = {{"input/raw_features", features_tensor}};
   std::vector<Tensor> outputs;
 
-  Status status = m_ppcSession[uhDepth]->Run(inputs, {"softmax/softmax"}, {}, &outputs);  
-  if (!status.ok()) {  
-      std::cerr << "ERROR: prediction failed..." << status.ToString() << std::endl;  
-      return NULL;  
+  Status status = m_ppcSession[uhDepth]->Run(inputs, {"softmax/softmax"}, {}, &outputs);
+  if (!status.ok())
+  {
+      std::cerr << "ERROR: prediction failed..." << status.ToString() << std::endl;
+      return NULL;
   }
 
   auto outputs_tensor_map = outputs[0].tensor<float, 2>();
   for (UInt uiCuIdx = 0; uiCuIdx < uiNumOfCus; ++uiCuIdx)
-  { 
+  {
     m_pbIsSplit[uiCuIdx] = (outputs_tensor_map(uiCuIdx, 0) < outputs_tensor_map(uiCuIdx, 0));
   }
   return m_pbIsSplit;
