@@ -77,7 +77,7 @@ Void SessionWrapper::init(UInt uiNumOfCus, UInt uiLogMaxCuWidth, UChar uhTotalDe
     if (!status.ok())
     {
       std::cerr << status.ToString() << std::endl;
-      return ;
+      return;
     }
   }
 }

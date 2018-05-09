@@ -139,20 +139,39 @@ Void CuModeIO::write(TComPic *&pcPic)
   {
     Pel *pPelLuma = pcPicYuv->getAddr(COMPONENT_Y, uiCtuRsAddr);
 
-    // write luma in ctu
-    for (UInt uiRow = 0; uiRow < m_uiMaxCuHeight; ++uiRow)
+    if (m_uiMaxCuHeight > 8 && 0)
     {
-      UInt offset = uiRow * stride;
-      for (UInt uiCol = 0; uiCol < m_uiMaxCuWidth; ++uiCol)
+      // write luma in ctu
+      for (UInt uiRow = 0; uiRow < m_uiMaxCuHeight; ++uiRow)
       {
-        m_file << pPelLuma[offset + uiCol] << ',';
+        UInt offset = uiRow * stride;
+        for (UInt uiCol = 0; uiCol < m_uiMaxCuWidth; ++uiCol)
+        {
+          m_file << pPelLuma[offset + uiCol] << ',';
+        }
+      }
+
+      // write whether ctu split or not    
+      m_file << (UInt)cuMode[uiCtuRsAddr].puhDepth[0];
+      m_file << std::endl;
+    }
+    else
+    {
+      for (UChar uhPartIdx = 0; uhPartIdx < 4; ++uhPartIdx)
+      {
+        UInt baseAddr = (uhPartIdx >> 1) * (m_uiMaxCuHeight >> 1) * stride + (uhPartIdx & 0x1) * (m_uiMaxCuWidth >> 1);
+        for (UInt uiRow = 0; uiRow < m_uiMaxCuHeight >> 1; ++uiRow)
+        {
+          UInt offset = uiRow * stride;
+          for (UInt uiCol = 0; uiCol < m_uiMaxCuWidth >> 1; ++uiCol)
+          {
+            m_file << pPelLuma[baseAddr + offset + uiCol] << ',';
+          }
+        }
+        m_file << (cuMode[uiCtuRsAddr].pePartSize[uhPartIdx << 2] == SIZE_2Nx2N ? 0 : 1);
+        m_file << std::endl;
       }
     }
-
-    // write whether ctu split or not
-    m_file << (UInt)cuMode[uiCtuRsAddr].puhDepth[0];
-    
-    m_file << std::endl;
   }
   ++m_iEncodedPictures;
 }

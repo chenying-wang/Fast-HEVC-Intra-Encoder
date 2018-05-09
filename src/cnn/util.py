@@ -170,14 +170,14 @@ def inception(input,
 					filter_size = [1, 1],
 					biases = True,
 					activation = True,
-					name = "5x5_reduced_0"
+					name = "5x5_reduced"
 				),
 				input_shape = [width, height, reduced_channel[1]],
 				filters = branch_channel[2],
 				filter_size = [3, 3],
 				biases = True,
 				activation = True,
-				name = "5x5_reduced_1"
+				name = "5x5_pre"
 			),
 			input_shape = [width, height, branch_channel[2]],
 			filters = branch_channel[2],

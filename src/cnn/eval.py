@@ -11,7 +11,7 @@ BATCH_SIZE = 100
 
 CKPT_PATH = lambda size_index: "./.tmp/" + str(size_index) + "/"
 
-def eval(size_index):
+def eval(size_index, sample_size = SAMPLE_SIZE):
 	with tf.variable_scope("input") as scope:
 		iterator = data.Dataset(size_index).get_eval().batch(BATCH_SIZE).make_initializable_iterator()
 		raw_features, labels = iterator.get_next()
@@ -29,6 +29,7 @@ def eval(size_index):
 	
 	saver = tf.train.Saver()
 
+	confusion_sum = [[0, 0], [0, 0]]
 	with tf.Session() as sess:
 		tf.global_variables_initializer().run()
 		iterator.initializer.run()
@@ -37,9 +38,8 @@ def eval(size_index):
 			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH(size_index)))
 		else:
 			print("ERROR: CHECKPOINT NOT FOUND!")
-			return
+			# return
 
-		confusion_sum = [[0, 0], [0, 0]]
 		for idx in range(int(SAMPLE_SIZE(size_index) / BATCH_SIZE)):
 			_pred, _labels, _accuracy = sess.run(
 				[pred, labels, accuracy]
@@ -72,8 +72,12 @@ def eval(size_index):
 			#	)
 			# )
 			print(confusion_sum)
+			print("accuracy = %.2f%%" % (
+				100 * (confusion_sum[0][0] + confusion_sum[1][1]) / (sum(confusion_sum[0]) + sum(confusion_sum[1]))
+			))
 
 		print("Evaluation Done")
+		return confusion_sum
 
 def main(unused_argv):
 	eval(size_index = int(sys.argv[1]))

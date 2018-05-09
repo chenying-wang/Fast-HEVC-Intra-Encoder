@@ -28,12 +28,12 @@ CuEstimator::~CuEstimator()
   }
   delete[] m_ppsCusLuma;
   
-  // for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
-  // {
-  //   delete[] m_ppsCuMaxLuma[uiCtuRsAddr];
-  //   delete[] m_ppsCuMinLuma[uiCtuRsAddr];
-  //   delete[] m_ppuhBestDepth[uiCtuRsAddr];
-  // }
+  for (UInt uiCtuRsAddr = 0; uiCtuRsAddr < m_uiNumOfCtus; ++uiCtuRsAddr)
+  {
+    delete[] m_ppsCuMaxLuma[uiCtuRsAddr];
+    delete[] m_ppsCuMinLuma[uiCtuRsAddr];
+    delete[] m_ppuhBestDepth[uiCtuRsAddr];
+  }
   delete[] m_ppsCuMaxLuma;
   delete[] m_ppsCuMinLuma;
   delete[] m_ppuhBestDepth;
