@@ -8,9 +8,9 @@ import new_cnn
 
 EPOCH = 1
 SAMPLE_SIZE = 51520000
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
-INIT_LEARNING_RATE = 0.001
+INIT_LEARNING_RATE = 0.0001
 DECAY_STEPS = 10000
 DECAY_RATE = 0.98
 KEEP_PROB = 0.5
@@ -22,9 +22,9 @@ GRAPH_FILENAME = "cnn_modle.pbtxt"
 TRAINING_LOG_DIR = lambda size_index: CKPT_PATH(size_index) + "train/"
 
 INIT_LOSS_WEIGHTS = [
-	[1.0, 0.15],
-	[1.0, 0.3],
-	[0.5, 1.0]
+	[1.7, 0.3],
+	[1.0, 1.0],
+	[0.7, 1.3]
 ]
 
 LOSS_WEIGHTS_STEP = 1000
@@ -105,8 +105,10 @@ def train(size_index):
 			saver.restore(sess, tf.train.latest_checkpoint(CKPT_PATH(size_index)))
 
 		for _ in range (int(EPOCH * SAMPLE_SIZE / BATCH_SIZE)):
-			_global_step, _, _loss, _accuracy,  = sess.run(
-				[global_step, train_batch, loss, accuracy],
+			_global_step = sess.run(global_step)
+
+			_, _loss, _accuracy,  = sess.run(
+				[train_batch, loss, accuracy],
 				feed_dict = {
 					loss_weights_0: _loss_weights[0],
 					loss_weights_1: _loss_weights[1]
@@ -142,18 +144,16 @@ def train(size_index):
 						l = _labels[i]
 						p = _pred[i]
 						_confusion_sum[l][p] += 1
-				
-				_loss_weights = [
-					2 * _confusion_sum[1][1] / (_confusion_sum[0][0] + _confusion_sum[1][1]),
-					2 * _confusion_sum[0][0] / (_confusion_sum[0][0] + _confusion_sum[1][1])				
-				]
-					
+
+				_loss_weights[0] = 0.6 * _loss_weights[0] + 0.4 * 2 * (_confusion_sum[1][1] + _confusion_sum[0][1]) / (sum(_confusion_sum[0]) + sum(_confusion_sum[1]))
+				_loss_weights[1] = 0.6 * _loss_weights[1] + 0.4 * 2 * (_confusion_sum[0][0] + _confusion_sum[1][0]) / (sum(_confusion_sum[0]) + sum(_confusion_sum[1]))
+
 				print(_confusion_sum)
 				print("accuracy = %.2f%%" % (
 					100 * (_confusion_sum[0][0] + _confusion_sum[1][1]) / (sum(_confusion_sum[0]) + sum(_confusion_sum[1]))
 				))
 				print(_loss_weights)
-		 
+
 		print("Training Done")
 
 	summary_writer.close()
@@ -163,4 +163,3 @@ def main(unused_argv):
 
 if __name__ == "__main__":
 	tf.app.run()
- 

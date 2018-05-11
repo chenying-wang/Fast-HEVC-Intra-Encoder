@@ -11,7 +11,7 @@ _inception_16x16 = util.inception_16x16
 _inception_8x8 = util.inception_8x8
 
 def _infer_64x64(features, keep_prob):
-	# Layer #1: 64x64x1 conv 3x3/2 64x64x32
+	# Layer #1: 64x64x1 conv 3x3/1 64x64x32
 	conv1 = _conv2d(
 		input = features,
 		input_shape = [64, 64, 1],
@@ -92,7 +92,7 @@ def _infer_64x64(features, keep_prob):
 		pool_size = 8,
 		strides = 1,
 		padding = "VALID",
-		name = "pool4"
+		name = "pool5"
 	)
 
 	# Layer #6: 1x1x256 fc 2
@@ -114,7 +114,7 @@ def _infer_64x64(features, keep_prob):
 
 
 def _infer_32x32(features, keep_prob):
-	# Layer #1: 32x32x1 conv 3x3/2 32x32x32
+	# Layer #1: 32x32x1 conv 3x3/1 32x32x32
 	conv1 = _conv2d(
 		input = features,
 		input_shape = [32, 32, 1],
@@ -152,6 +152,13 @@ def _infer_32x32(features, keep_prob):
 			reduced_channel = [32, 8],
 			name = "a"
 		)
+		# inception3b = _inception_16x16(
+		# 	input = inception3a,
+		# 	input_channel = 128,
+		# 	branch_channel = [48, 96, 24, 24],
+		# 	reduced_channel = [32, 8],
+		# 	name = "b"
+		# )
 
 	# Pool #3: 16x16x128 max 3x3/2 8x8x128
 	pool3 = _max_pooling(
@@ -163,40 +170,40 @@ def _infer_32x32(features, keep_prob):
 
 	# Layer #4: 8x8x128 inception x1 8x8x256
 	with tf.variable_scope("inception4") as scope:
+		# inception4a = _inception_8x8(
+		# 	input = pool3,
+		# 	input_channel = 192,
+		# 	branch_channel = [64, 128, 32, 32],
+		# 	reduced_channel = [64, 8],
+		# 	name = "b"
+		# )
 		inception4a = _inception_8x8(
 			input = pool3,
 			input_channel = 128,
 			branch_channel = [48, 96, 24, 24],
 			reduced_channel = [32, 8],
-			name = "a"
-		)
-		inception4b = _inception_8x8(
-			input = inception4a,
-			input_channel = 192,
-			branch_channel = [64, 128, 32, 32],
-			reduced_channel = [64, 8],
 			name = "b"
 		)
 	
 	# Pool #4: 8x8x256 avg 8x8/1v 1x1x256
 	pool4 = _avg_pooling(
-		input = inception4b,
+		input = inception4a,
 		pool_size = 8,
 		strides = 1,
 		padding = "VALID",
 		name = "pool4"
 	)
 
-	# Layer #4: 1x1x256 fc 2
+	# Layer #5: 1x1x256 fc 2
 	with tf.variable_scope("fc") as scope:
 		pool4_flat = tf.reshape(
 			tensor = pool4,
-			shape = [-1, 256],
+			shape = [-1, 192],
 			name = "pool4_flat"
 		)
 		logits = _fc_with_dropout(
 			input = pool4_flat,
-			input_size = 256,
+			input_size = 192,
 			output_size = 2,
 			keep_prob = keep_prob,
 			name = "logits"
@@ -206,7 +213,7 @@ def _infer_32x32(features, keep_prob):
 
 
 def _infer_16x16(features, keep_prob):
-	# Layer #1: 16x16x1 conv 3x3/2 16x16x32
+	# Layer #1: 16x16x1 conv 3x3/1 16x16x32
 	conv1 = _conv2d(
 		input = features,
 		input_shape = [16, 16, 1],

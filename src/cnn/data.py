@@ -28,7 +28,7 @@ class Dataset:
 		self.width = FEATURE_WIDTH[size_index]
 		self.height = FEATURE_HEIGHT[size_index]
 		self.size = self.width * self.height
-		self.shuffle_buffer = 500
+		self.shuffle_buffer = 512
 
 	def _parse_line(self, line):
 		RECORD_DEFAULT = [[0.0] for i in range(self.size + 1)]
