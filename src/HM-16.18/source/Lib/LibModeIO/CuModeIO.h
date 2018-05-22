@@ -36,6 +36,7 @@ private:
   UInt m_uiMaxCuHeight;
   UInt m_uiLogMaxCuHeight;
   UInt m_uiMaxTotalCuDepth;
+  Int m_iQP;
 
   UInt m_uiFrameWidthInCtus;
   UInt m_uiFrameHeightInCtus;
@@ -65,7 +66,7 @@ protected:
 public:
   CuModeIO(IOMode mode);
   virtual ~CuModeIO();
-  Void init(const std::string &filename, const Int iNumPictures, const Int iPicWidth, const Int iPicHeight, const UInt uiMaxCuWidth, const UInt uiMaxCuHeight, const UInt uiMaxTotalCUDepth);
+  Void init(const std::string &filename, const Int iNumPictures, const Int iPicWidth, const Int iPicHeight, const UInt uiMaxCuWidth, const UInt uiMaxCuHeight, const UInt uiMaxTotalCUDepth, const Int iQp);
   UChar **read(TComPic *&pcPic);
   Void write(TComPic *&pcPic);
 };

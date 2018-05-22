@@ -7,8 +7,6 @@
 #ifndef __CUESTIMATOR__
 #define __CUESTIMATOR__
 
-#define RANGE_LOW_THRESHOLD 40
-
 class CuEstimator
 {
 private:
@@ -19,6 +17,8 @@ private:
   UInt m_uiLogMaxCuWidth;
   UInt m_uiLogMaxCuHeight;
   UInt m_uiMaxTotalCuDepth;
+  Int m_iQP;
+  
   UInt m_uiMaxCuSize;
   UInt m_uiFrameWidthInCtus;
   UInt m_uiFrameHeightInCtus;
@@ -43,6 +43,8 @@ private:
 
   UInt *m_puiSum;
 
+  const UInt *m_uiRangeLowThreshold = new UInt[3]{20, 25, 30};
+
 protected:
   Void xProcessCtu(Pel **ppsCtusLuma);
   Void xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth);
@@ -50,7 +52,7 @@ protected:
 public:
   CuEstimator();
   virtual ~CuEstimator();
-  Void init(const Int iPicWidth, const Int iPicHeight, const UInt uiLogMaxCuWidth, const UInt uiLogMaxCuHeight, const UInt uiMaxTotalCuDepth, const UInt uiFrameWidthInCtus, const UInt uiFrameHeightInCtus, const UInt uiNumOfCtus);
+  Void init(const Int iPicWidth, const Int iPicHeight, const UInt uiLogMaxCuWidth, const UInt uiLogMaxCuHeight, const UInt uiMaxTotalCuDepth, const UInt uiFrameWidthInCtus, const UInt uiFrameHeightInCtus, const UInt uiNumOfCtus, const Int iQp);
   UChar **estimateCtus(Pel **ppsCtusLuma);
 };
 

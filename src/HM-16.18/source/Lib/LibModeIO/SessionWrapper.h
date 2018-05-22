@@ -27,7 +27,7 @@ private:
 public:
   SessionWrapper();
   virtual ~SessionWrapper();
-  Void init(UInt uiNumOfCus, UInt uiLogMaxCuWidth, UChar uhTotalDepth);
+  Void init(const UInt uiNumOfCus, const UInt uiLogMaxCuWidth, const UChar uhTotalDepth);
   Bool *infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth);
 };
 

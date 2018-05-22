@@ -4,26 +4,10 @@ Fast HEVC Intra Encoder is an improvement on [HEVC Test Model](https://hevc.hhi.
 
 ## Build
 
-### Linux
-
 ```
 git clone git://github.com/chenying-wang/Fast-HEVC-Intra-Encoder.git
 make -C src/HM-16.18/build/linux all
 ```
-
-### Windows
-
-```
-git clone git://github.com/chenying-wang/Fast-HEVC-Intra-Encoder.git
-MSBuild /t:Build src\HM-16.18\build\HM_vc2015.sln
-```
-
-## To-Do List
-
-- [x] Extract CTU/CU modes of training data from HM encoder.
-- [ ] Early-termination and early-split algorithm.
-- [ ] Implement and train CNN in TensorFlow.
-- [ ] Merge CNN into HM encoder and test.
 
 ## License
 

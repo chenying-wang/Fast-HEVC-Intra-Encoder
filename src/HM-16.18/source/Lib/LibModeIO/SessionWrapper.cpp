@@ -42,7 +42,7 @@ SessionWrapper::~SessionWrapper()
 /**
  * Initialize
 */
-Void SessionWrapper::init(UInt uiNumOfCus, UInt uiLogMaxCuWidth, UChar uhTotalDepth)
+Void SessionWrapper::init(const UInt uiNumOfCus, const UInt uiLogMaxCuWidth, const UChar uhTotalDepth)
 {
   m_uhTotalDepth = uhTotalDepth;
   
@@ -111,7 +111,7 @@ Bool *SessionWrapper::infer(Pel **ppsCusLuma, UInt uiNumOfCus, UChar uhDepth)
   auto outputs_tensor_map = outputs[0].tensor<float, 2>();
   for (UInt uiCuIdx = 0; uiCuIdx < uiNumOfCus; ++uiCuIdx)
   {
-    m_pbIsSplit[uiCuIdx] = (outputs_tensor_map(uiCuIdx, 0) < outputs_tensor_map(uiCuIdx, 0));
+    m_pbIsSplit[uiCuIdx] = (outputs_tensor_map(uiCuIdx, 0) - outputs_tensor_map(uiCuIdx, 1) < 0);
   }
   return m_pbIsSplit;
 }

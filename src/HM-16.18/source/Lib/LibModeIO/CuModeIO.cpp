@@ -48,7 +48,8 @@ Void CuModeIO::init(const std::string &filename,
                     const Int iPicHeight,
                     const UInt uiMaxCuWidth,
                     const UInt uiMaxCuHeight,
-                    const UInt uiMaxTotalCUDepth)
+                    const UInt uiMaxTotalCUDepth,
+                    const Int iQp)
 {
   assert(m_mode == IN || m_mode == OUT);
   if (m_mode == OUT) xSetFilename(filename, uiMaxCuWidth);
@@ -65,6 +66,8 @@ Void CuModeIO::init(const std::string &filename,
 
   m_uiMaxTotalCuDepth = uiMaxTotalCUDepth;
 
+  m_iQP = iQp;
+
   m_uiFrameWidthInCtus = (m_iPicWidth >> m_uiLogMaxCuWidth) + (m_iPicWidth & ((1 << m_uiLogMaxCuWidth) - 1) ? 1 :0 );
   m_uiFrameHeightInCtus = (m_iPicHeight >> m_uiLogMaxCuHeight) + (m_iPicHeight & ((1 << m_uiLogMaxCuHeight) - 1) ? 1 : 0);
   m_uiNumOfCtus = m_uiFrameWidthInCtus * m_uiFrameHeightInCtus;
@@ -76,7 +79,7 @@ Void CuModeIO::init(const std::string &filename,
     {
       m_ppsCtuLuma[uiCtuRsAddr] = new Pel[1 << (m_uiLogMaxCuWidth + m_uiLogMaxCuHeight)];
     }
-    m_pcCuEstimator->init(m_iPicWidth, m_iPicHeight, m_uiLogMaxCuWidth, m_uiLogMaxCuHeight, m_uiMaxTotalCuDepth, m_uiFrameWidthInCtus, m_uiFrameHeightInCtus, m_uiNumOfCtus);
+    m_pcCuEstimator->init(m_iPicWidth, m_iPicHeight, m_uiLogMaxCuWidth, m_uiLogMaxCuHeight, m_uiMaxTotalCuDepth, m_uiFrameWidthInCtus, m_uiFrameHeightInCtus, m_uiNumOfCtus, m_iQP);
   }
   else if (m_mode == OUT)
   {

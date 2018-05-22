@@ -57,7 +57,8 @@ Void CuEstimator::init(const Int iPicWidth,
                        const UInt uiMaxTotalCuDepth,
                        const UInt uiFrameWidthInCtus,
                        const UInt uiFrameHeightInCtus,
-                       const UInt uiNumOfCtus)
+                       const UInt uiNumOfCtus,
+                       const Int iQp)
 {
   m_iPicWidth = iPicWidth;
   m_iPicHeight = iPicHeight;
@@ -209,7 +210,7 @@ Void CuEstimator::xSplitCuInDepth(Pel **ppsCtusLuma, UChar uhDepth)
         minLuma = std::min(m_ppsCuMinLuma[uiCtuRsAddr][i], minLuma);
       }
       Pel range = maxLuma - minLuma;
-      if (range > RANGE_LOW_THRESHOLD)
+      if (range > m_uiRangeLowThreshold[uhDepth])
       {
         for(UInt uiRow = 0; uiRow < uiCuHeight; ++uiRow)
         {

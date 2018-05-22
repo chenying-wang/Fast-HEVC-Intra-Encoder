@@ -250,7 +250,7 @@ Void TEncTop::init(Bool isFieldCoding)
 #if _CU_MODE_INPUT || _CU_MODE_OUTPUT
   m_pcCuModeIO->init(inputFilename,
     m_framesToBeEncoded, m_iSourceWidth, m_iSourceHeight,
-    m_maxCUWidth, m_maxCUHeight, m_log2DiffMaxMinCodingBlockSize);
+    m_maxCUWidth, m_maxCUHeight, m_log2DiffMaxMinCodingBlockSize, m_iQP);
 #endif
 }
 

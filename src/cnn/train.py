@@ -11,8 +11,8 @@ SAMPLE_SIZE = 51520000
 BATCH_SIZE = 32
 
 INIT_LEARNING_RATE = 0.0001
-DECAY_STEPS = 10000
-DECAY_RATE = 0.98
+DECAY_STEPS = 5000
+DECAY_RATE = 0.94
 KEEP_PROB = 0.5
 
 CKPT_PATH = lambda size_index: "./.tmp/" + str(size_index) + "/"
@@ -23,7 +23,7 @@ TRAINING_LOG_DIR = lambda size_index: CKPT_PATH(size_index) + "train/"
 
 INIT_LOSS_WEIGHTS = [
 	[1.7, 0.3],
-	[1.0, 1.0],
+	[1.3, 0.7],
 	[0.7, 1.3]
 ]
 
